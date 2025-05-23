@@ -1430,14 +1430,6 @@ pub mod referral_system {
                 &ctx.accounts.token_program,
                 deposit_amount
             )?;
-            
-            // Emit slot filled event with deposit
-            emit!(SlotFilled {
-                slot_idx: 0,
-                chain_id: ctx.accounts.referrer.chain.id,
-                user: ctx.accounts.user_wallet.key(),
-                owner: ctx.accounts.referrer.key(),
-            });
         } 
         // LOGIC FOR SLOT 2: Reserve SOL value and mint tokens
         else if slot_idx == 1 {
@@ -1470,14 +1462,6 @@ pub mod referral_system {
             
             // Update reserved value for the referrer
             ctx.accounts.referrer.reserved_sol = deposit_amount;
-            
-            // Emit slot filled event with reserve
-            emit!(SlotFilled {
-                slot_idx: 1,
-                chain_id: ctx.accounts.referrer.chain.id,
-                user: ctx.accounts.user_wallet.key(),
-                owner: ctx.accounts.referrer.key(),
-            });
             
             // Calculate tokens based on pool value
             let token_amount = get_donut_tokens_amount(
