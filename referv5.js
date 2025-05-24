@@ -1,4 +1,4 @@
-// Script CORRIGIDO para registrar usuário com referenciador - SEM user_wsol_account
+// Cliente FINAL para registrar usuário com referenciador - WSOL via Remaining Accounts
 const { 
   Connection, 
   Keypair, 
@@ -21,7 +21,7 @@ const configPath = args[1] || './matriz-config.json';
 const referrerAddressStr = args[2]; // Endereço do referenciador como string
 const altAddress = args[3]; // Endereço da ALT como argumento obrigatório
 
-// Função para mostrar detalhes completos da Address Lookup Table (permanece igual)
+// Função para mostrar detalhes completos da Address Lookup Table
 async function getAddressLookupTable(connection, altAddress) {
   console.log("\n📋 OBTENDO ADDRESS LOOKUP TABLE:");
   
@@ -54,7 +54,7 @@ async function getAddressLookupTable(connection, altAddress) {
   }
 }
 
-// Função para preparar uplines para recursividade (permanece igual)
+// Função para preparar uplines para recursividade
 async function prepareUplinesForRecursion(connection, program, uplinePDAs, TOKEN_MINT) {
   const remainingAccounts = [];
   const triosInfo = [];
@@ -178,21 +178,21 @@ async function prepareUplinesForRecursion(connection, program, uplinePDAs, TOKEN
 
 async function main() {
   try {
-    console.log("🚀 REGISTRANDO USUÁRIO COM REFERENCIADOR (WSOL DINÂMICO) 🚀");
-    console.log("================================================================");
+    console.log("🚀 REGISTRANDO USUÁRIO COM WSOL VIA REMAINING ACCOUNTS 🚀");
+    console.log("===========================================================");
 
     // Verificar argumentos obrigatórios
     if (!referrerAddressStr) {
       console.error("❌ ERRO: Endereço do referenciador não fornecido!");
       console.error("Por favor, especifique o endereço do referenciador como terceiro argumento.");
-      console.error("Exemplo: node referv4.js /caminho/para/carteira.json ./matriz-config.json EnderecoDoReferenciador EnderecoALT");
+      console.error("Exemplo: node script.js /caminho/para/carteira.json ./config.json EnderecoDoReferenciador EnderecoALT");
       return;
     }
     
     if (!altAddress) {
       console.error("❌ ERRO: Endereço da ALT não fornecido!");
       console.error("Por favor, especifique o endereço da ALT como quarto argumento.");
-      console.error("Exemplo: node referv4.js /caminho/para/carteira.json ./matriz-config.json EnderecoDoReferenciador EnderecoALT");
+      console.error("Exemplo: node script.js /caminho/para/carteira.json ./config.json EnderecoDoReferenciador EnderecoALT");
       return;
     }
     
@@ -320,14 +320,17 @@ async function main() {
       
       console.log("🎯 VOCÊ PREENCHERÁ O SLOT " + (nextSlotIndex + 1) + " DA MATRIZ");
       
-      // === ADICIONAR INFORMAÇÃO SOBRE WSOL ===
-      console.log("\n💡 INFORMAÇÃO SOBRE CRIAÇÃO DE WSOL:");
+      // 🎯 INFORMAÇÃO OTIMIZADA SOBRE WSOL
+      console.log("\n💡 INFORMAÇÃO SOBRE USO DE WSOL (VIA REMAINING ACCOUNTS):");
       if (nextSlotIndex === 0) {
-        console.log("✅ SLOT 1 (idx 0): WSOL será criada dinamicamente para depositar na pool");
+        console.log("✅ SLOT 1 (idx 0): WSOL será passada via remaining_accounts (posição 5)");
+        console.log("   📍 Depósito será feito na pool usando WSOL existente");
       } else if (nextSlotIndex === 1) {
-        console.log("ℹ️ SLOT 2 (idx 1): WSOL NÃO será criada - SOL direto para reserva");
+        console.log("ℹ️ SLOT 2 (idx 1): WSOL NÃO será necessária");
+        console.log("   📍 SOL será usado diretamente para reserva + mint de tokens");
       } else if (nextSlotIndex === 2) {
-        console.log("🔄 SLOT 3 (idx 2): WSOL pode ser criada na recursividade se necessário");
+        console.log("🔄 SLOT 3 (idx 2): WSOL pode ser usada na recursividade");
+        console.log("   📍 WSOL será passada via remaining_accounts quando necessário");
       }
     } catch (e) {
       console.error("❌ Erro ao verificar referenciador:", e);
@@ -391,9 +394,125 @@ async function main() {
     }
     console.log("🔑 REFERRER_TOKEN_ACCOUNT (ATA): " + referrerTokenAccount.toString());
     
-    // === REMOVIDO: user_wsol_account ===
-    // NÃO CRIAMOS MAIS A ATA WSOL ANTECIPADAMENTE
-    console.log("\n💡 WSOL: Conta será criada dinamicamente apenas quando necessário");
+    // 🎯 CRIAÇÃO DA CONTA WSOL QUANDO NECESSÁRIA
+    let userWsolAccount = null;
+    const nextSlotIndex = referrerInfo.chain.filledSlots;
+    const needsWsol = nextSlotIndex === 0 || nextSlotIndex === 2; // SLOT 1 ou SLOT 3
+    
+    if (needsWsol) {
+      console.log("\n🔧 CRIANDO CONTA WSOL (NECESSÁRIA PARA ESTE SLOT)...");
+      
+      userWsolAccount = utils.token.associatedAddress({
+        mint: WSOL_MINT,
+        owner: walletKeypair.publicKey,
+      });
+      
+      console.log("💰 WSOL Account (ATA): " + userWsolAccount.toString());
+      
+      // Verificar se já existe
+      const wsolAccountInfo = await connection.getAccountInfo(userWsolAccount);
+      if (!wsolAccountInfo) {
+        console.log("  ⚠️ Conta WSOL não existe, criando...");
+        
+        const createWsolATAIx = new TransactionInstruction({
+          keys: [
+            { pubkey: walletKeypair.publicKey, isSigner: true, isWritable: true },
+            { pubkey: userWsolAccount, isSigner: false, isWritable: true },
+            { pubkey: walletKeypair.publicKey, isSigner: false, isWritable: false },
+            { pubkey: WSOL_MINT, isSigner: false, isWritable: false },
+            { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+            { pubkey: SPL_TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+            { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false }
+          ],
+          programId: ASSOCIATED_TOKEN_PROGRAM_ID,
+          data: Buffer.from([])
+        });
+        
+        const tx = new Transaction().add(createWsolATAIx);
+        tx.feePayer = walletKeypair.publicKey;
+        const { blockhash } = await connection.getLatestBlockhash();
+        tx.recentBlockhash = blockhash;
+        
+        const signedTx = await provider.wallet.signTransaction(tx);
+        const txid = await connection.sendRawTransaction(signedTx.serialize());
+        
+        await connection.confirmTransaction(txid);
+        console.log("  ✅ Conta WSOL criada: " + txid);
+        
+        // Financiar conta WSOL com SOL + rent exempt
+        const rentExempt = await connection.getMinimumBalanceForRentExemption(165); // Token account size
+        const totalToWrap = FIXED_DEPOSIT_AMOUNT + rentExempt;
+        
+        console.log("  💰 Financiando conta WSOL com " + totalToWrap / 1e9 + " SOL...");
+        
+        const transferToWsolIx = SystemProgram.transfer({
+          fromPubkey: walletKeypair.publicKey,
+          toPubkey: userWsolAccount,
+          lamports: totalToWrap,
+        });
+        
+        const syncNativeIx = new TransactionInstruction({
+          keys: [{ pubkey: userWsolAccount, isSigner: false, isWritable: true }],
+          programId: SPL_TOKEN_PROGRAM_ID,
+          data: Buffer.from([17]) // SyncNative instruction
+        });
+        
+        const wrapTx = new Transaction().add(transferToWsolIx, syncNativeIx);
+        wrapTx.feePayer = walletKeypair.publicKey;
+        const { blockhash: wrapBlockhash } = await connection.getLatestBlockhash();
+        wrapTx.recentBlockhash = wrapBlockhash;
+        
+        const signedWrapTx = await provider.wallet.signTransaction(wrapTx);
+        const wrapTxid = await connection.sendRawTransaction(signedWrapTx.serialize());
+        
+        await connection.confirmTransaction(wrapTxid);
+        console.log("  ✅ WSOL financiada e sincronizada: " + wrapTxid);
+      } else {
+        console.log("  ✅ Conta WSOL já existe");
+        
+        // Verificar saldo e financiar se necessário
+        try {
+          const tokenAccountData = await connection.getTokenAccountBalance(userWsolAccount);
+          const currentBalance = tokenAccountData.value.uiAmount || 0;
+          const requiredBalance = FIXED_DEPOSIT_AMOUNT / 1e9;
+          
+          if (currentBalance < requiredBalance) {
+            console.log(`  💰 Saldo insuficiente: ${currentBalance} SOL, necessário: ${requiredBalance} SOL`);
+            console.log("  💰 Adicionando SOL à conta WSOL...");
+            
+            const transferToWsolIx = SystemProgram.transfer({
+              fromPubkey: walletKeypair.publicKey,
+              toPubkey: userWsolAccount,
+              lamports: FIXED_DEPOSIT_AMOUNT,
+            });
+            
+            const syncNativeIx = new TransactionInstruction({
+              keys: [{ pubkey: userWsolAccount, isSigner: false, isWritable: true }],
+              programId: SPL_TOKEN_PROGRAM_ID,
+              data: Buffer.from([17]) // SyncNative instruction
+            });
+            
+            const fundTx = new Transaction().add(transferToWsolIx, syncNativeIx);
+            fundTx.feePayer = walletKeypair.publicKey;
+            const { blockhash: fundBlockhash } = await connection.getLatestBlockhash();
+            fundTx.recentBlockhash = fundBlockhash;
+            
+            const signedFundTx = await provider.wallet.signTransaction(fundTx);
+            const fundTxid = await connection.sendRawTransaction(signedFundTx.serialize());
+            
+            await connection.confirmTransaction(fundTxid);
+            console.log("  ✅ WSOL financiada adicional: " + fundTxid);
+          } else {
+            console.log(`  ✅ Saldo WSOL suficiente: ${currentBalance} SOL`);
+          }
+        } catch (e) {
+          console.log("  ⚠️ Erro ao verificar saldo WSOL, prosseguindo...");
+        }
+      }
+    } else {
+      console.log("\n💡 WSOL NÃO É NECESSÁRIA PARA ESTE SLOT");
+      console.log("   📍 SOL será usado diretamente para reserva");
+    }
 
     console.log("\n🔧 VERIFICANDO E CRIANDO ATAS NECESSÁRIAS...");
 
@@ -440,7 +559,7 @@ async function main() {
         console.error("  ❌ ERRO ao verificar ATAs:", e);
     }
     
-    // Preparar uplines para recursividade (permanece igual)
+    // Preparar uplines para recursividade
     let uplineAccounts = [];
     const isSlot3 = referrerInfo.chain.filledSlots === 2;
     
@@ -486,18 +605,49 @@ async function main() {
         microLamports: 5000
       });
       
+      // 🎯 PREPARAÇÃO DOS REMAINING ACCOUNTS NA NOVA ORDEM
       const vaultAAccounts = [
-        { pubkey: A_VAULT_LP, isWritable: true, isSigner: false },
-        { pubkey: A_VAULT_LP_MINT, isWritable: true, isSigner: false },
-        { pubkey: A_TOKEN_VAULT, isWritable: true, isSigner: false },
+        { pubkey: A_VAULT_LP, isWritable: true, isSigner: false },      // Posição 0
+        { pubkey: A_VAULT_LP_MINT, isWritable: true, isSigner: false }, // Posição 1
+        { pubkey: A_TOKEN_VAULT, isWritable: true, isSigner: false },   // Posição 2
       ];
       
       const chainlinkAccounts = [
-        { pubkey: SOL_USD_FEED, isWritable: false, isSigner: false },
-        { pubkey: CHAINLINK_PROGRAM, isWritable: false, isSigner: false },
+        { pubkey: SOL_USD_FEED, isWritable: false, isSigner: false },     // Posição 3
+        { pubkey: CHAINLINK_PROGRAM, isWritable: false, isSigner: false }, // Posição 4
       ];
       
-      const allRemainingAccounts = [...vaultAAccounts, ...chainlinkAccounts, ...uplineAccounts];
+      // 🎯 MONTAGEM DOS REMAINING ACCOUNTS CONFORME NOVA IMPLEMENTAÇÃO
+      let allRemainingAccounts = [...vaultAAccounts, ...chainlinkAccounts];
+      
+      // 🎯 ADICIONAR WSOL NA POSIÇÃO 5 (WSOL_ACCOUNT_POSITION) QUANDO NECESSÁRIO
+      if (needsWsol && userWsolAccount) {
+        console.log(`\n💡 ADICIONANDO WSOL na posição ${allRemainingAccounts.length} dos remaining_accounts`);
+        console.log(`   📍 WSOL Account: ${userWsolAccount.toString()}`);
+        
+        allRemainingAccounts.push({
+          pubkey: userWsolAccount,
+          isWritable: true,
+          isSigner: false
+        });
+      }
+      
+      // 🎯 ADICIONAR UPLINES APÓS WSOL (OU NA POSIÇÃO 5 SE WSOL NÃO FOR NECESSÁRIA)
+      if (uplineAccounts.length > 0) {
+        console.log(`\n🔄 ADICIONANDO ${uplineAccounts.length / 3} UPLINES após posição ${allRemainingAccounts.length - 1}`);
+        allRemainingAccounts = [...allRemainingAccounts, ...uplineAccounts];
+      }
+      
+      console.log("\n📋 ESTRUTURA FINAL DOS REMAINING_ACCOUNTS:");
+      console.log(`  Posição 0-2: Vault A accounts`);
+      console.log(`  Posição 3-4: Chainlink accounts`);
+      if (needsWsol) {
+        console.log(`  Posição 5: WSOL account (${userWsolAccount?.toString() || 'N/A'})`);
+        console.log(`  Posição 6+: Uplines (${uplineAccounts.length / 3} trios)`);
+      } else {
+        console.log(`  Posição 5+: Uplines (${uplineAccounts.length / 3} trios) - WSOL não necessária`);
+      }
+      console.log(`  Total: ${allRemainingAccounts.length} contas`);
       
       console.log("\n🔍 VERIFICANDO ORDEM DE REMAINING_ACCOUNTS:");
       console.log(`  Índice 3 (Feed): ${allRemainingAccounts[3].pubkey.toString()}`);
@@ -511,8 +661,8 @@ async function main() {
         return;
       }
       
-      // === INSTRUÇÃO CORRIGIDA - SEM user_wsol_account ===
-      console.log("\n🔧 Gerando instrução CORRIGIDA (sem user_wsol_account)...");
+      // 🎯 INSTRUÇÃO OTIMIZADA - WSOL VIA REMAINING ACCOUNTS
+      console.log("\n🔧 Gerando instrução OTIMIZADA (WSOL via remaining_accounts)...");
       
       const anchorIx = await program.methods
         .registerWithSolDeposit(new BN(FIXED_DEPOSIT_AMOUNT))
@@ -522,8 +672,7 @@ async function main() {
           referrer: referrerAccount,
           referrerWallet: referrerAddress,
           user: userAccount,
-          // === REMOVIDO: userWsolAccount ===
-          wsolMint: WSOL_MINT,
+          wsolMint: WSOL_MINT, // Mantido para referência
           pool: POOL_ADDRESS,
           bVault: B_VAULT,
           bTokenVault: B_TOKEN_VAULT,
@@ -571,13 +720,18 @@ async function main() {
 
       transaction.sign([walletKeypair]);
 
-      console.log("✅ Transação versionada manual criada e assinada");
+      console.log("✅ Transação versionada criada e assinada");
       console.log(`📊 Usando ALT com ${lookupTableAccount.state.addresses.length} endereços`);
-      console.log(`⚙️ Versão da transação: V0 (Versionada manual)`);
+      console.log(`⚙️ Versão da transação: V0 (Versionada)`);
       console.log(`🔄 Processando ${uplineAccounts.length / 3} uplines na recursividade`);
-      console.log("💡 WSOL: Será criada dinamicamente apenas quando necessário");
+      
+      if (needsWsol) {
+        console.log("💡 WSOL: Passada via remaining_accounts (posição 5)");
+      } else {
+        console.log("💡 WSOL: NÃO necessária para este slot");
+      }
 
-      console.log("\n📤 ENVIANDO TRANSAÇÃO VERSIONADA MANUAL...");
+      console.log("\n📤 ENVIANDO TRANSAÇÃO VERSIONADA...");
 
       const txid = await connection.sendTransaction(transaction, {
         maxRetries: 5,
@@ -638,18 +792,20 @@ async function main() {
         console.log("\n📋 ESTADO DO REFERENCIADOR APÓS REGISTRO:");
         console.log("📊 Slots preenchidos: " + newReferrerInfo.chain.filledSlots + "/3");
         
-        // === VERIFICAÇÃO ESPECÍFICA SOBRE WSOL ===
-        console.log("\n💡 VERIFICAÇÃO DO USO DE WSOL:");
+        // 🎯 VERIFICAÇÃO ESPECÍFICA SOBRE WSOL OTIMIZADA
+        console.log("\n💡 VERIFICAÇÃO DO USO OTIMIZADO DE WSOL:");
         const slotPreenchido = referrerInfo.chain.filledSlots;
         if (slotPreenchido === 0) {
-          console.log("✅ SLOT 1 (idx 0): WSOL foi criada dinamicamente para depósito na pool");
+          console.log("✅ SLOT 1 (idx 0): WSOL foi usada via remaining_accounts para depósito na pool");
+          console.log("   📍 Posição no remaining_accounts: 5");
         } else if (slotPreenchido === 1) {
-          console.log("✅ SLOT 2 (idx 1): WSOL NÃO foi criada - SOL usado diretamente para reserva");
+          console.log("✅ SLOT 2 (idx 1): WSOL NÃO foi usada - SOL usado diretamente para reserva");
           if (newReferrerInfo.reservedTokens > 0) {
             console.log(`💰 Tokens reservados: ${newReferrerInfo.reservedTokens / 1e9} tokens`);
           }
         } else if (slotPreenchido === 2) {
-          console.log("✅ SLOT 3 (idx 2): WSOL criada dinamicamente conforme necessário na recursividade");
+          console.log("✅ SLOT 3 (idx 2): WSOL passada via remaining_accounts para recursividade");
+          console.log("   📍 Posição no remaining_accounts: 5 (antes das uplines)");
         }
         
         if (isSlot3 && uplineAccounts.length > 0) {
@@ -676,9 +832,9 @@ async function main() {
                   
                   // Verificar se WSOL foi usado neste slot
                   if (j === 0) {
-                    console.log(`  💡 WSOL: Criada dinamicamente para este slot (depósito na pool)`);
+                    console.log(`  💡 WSOL: Usada via remaining_accounts para este slot (depósito na pool)`);
                   } else if (j === 1) {
-                    console.log(`  💡 WSOL: NÃO criada para este slot (SOL direto para reserva)`);
+                    console.log(`  💡 WSOL: NÃO usada para este slot (SOL direto para reserva)`);
                   }
                   
                   uplineReverseCount++;
@@ -705,18 +861,22 @@ async function main() {
         console.log("\n💼 Seu novo saldo: " + newBalance / 1e9 + " SOL");
         console.log("💰 SOL gasto: " + (balance - newBalance) / 1e9 + " SOL");
         
-        console.log("\n🎉 REGISTRO COM WSOL DINÂMICO CONCLUÍDO COM SUCESSO! 🎉");
-        console.log("=========================================================");
-        console.log("\n💡 RESUMO DA OTIMIZAÇÃO WSOL:");
-        console.log("✅ WSOL criada apenas quando necessário (slot_idx 0)");
-        console.log("✅ SOL usado diretamente para slots 1 e 2");
-        console.log("✅ Economia de compute units e rent");
-        console.log("✅ Lifecycle completo: Criar → Usar → Fechar");
+        console.log("\n🎉 REGISTRO COM WSOL VIA REMAINING ACCOUNTS CONCLUÍDO! 🎉");
+        console.log("============================================================");
+        console.log("\n💡 RESUMO DA IMPLEMENTAÇÃO OTIMIZADA:");
+        console.log("✅ WSOL passada via remaining_accounts apenas quando necessária");
+        console.log("✅ Posição fixa no remaining_accounts (posição 5)");
+        console.log("✅ SOL usado diretamente para slots que não precisam de WSOL");
+        console.log("✅ Arquitetura flexível e eficiente");
+        console.log("✅ Verificação rigorosa de endereços e posições");
         
         console.log("\n⚠️ IMPORTANTE: GUARDE ESTES ENDEREÇOS PARA USO FUTURO:");
         console.log("🔑 SEU ENDEREÇO: " + walletKeypair.publicKey.toString());
         console.log("🔑 SUA CONTA PDA: " + userAccount.toString());
         console.log("🔑 ADDRESS LOOKUP TABLE: " + altAddress.toString());
+        if (userWsolAccount) {
+          console.log("🔑 SUA CONTA WSOL: " + userWsolAccount.toString());
+        }
       } catch (e) {
         console.error("❌ ERRO AO VERIFICAR RESULTADOS:", e);
       }
