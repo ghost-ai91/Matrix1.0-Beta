@@ -39,6 +39,10 @@ const MAX_UPLINE_DEPTH: usize = 6;
 // Number of Vault A accounts in the remaining_accounts
 const VAULT_A_ACCOUNTS_COUNT: usize = 3;
 
+// Posições específicas no remaining_accounts
+const CHAINLINK_ACCOUNTS_COUNT: usize = 2;
+const WSOL_ACCOUNT_POSITION: usize = VAULT_A_ACCOUNTS_COUNT + CHAINLINK_ACCOUNTS_COUNT; // Posição 5
+
 // Constants for strict address verification
 pub mod verified_addresses {
     use solana_program::pubkey::Pubkey;
@@ -191,6 +195,10 @@ pub enum ErrorCode {
     InvalidChainlinkProgram,
     #[msg("Invalid price feed")]
     InvalidPriceFeed,
+    #[msg("WSOL account not provided when required")]
+    MissingWsolAccount,
+    #[msg("Invalid WSOL account")]
+    InvalidWsolAccount,
 }
 
 #[event]
@@ -647,72 +655,122 @@ fn verify_token_account<'info>(
     Ok(())
 }
 
-// FUNÇÃO CHAVE: Depósito SOL Direto na Pool
-fn process_sol_deposit_to_pool<'info>(
+// 🎯 FUNÇÃO CHAVE: Verificar e validar WSOL via remaining_accounts
+fn verify_wsol_account<'info>(
+    wsol_account: &AccountInfo<'info>,
+    expected_owner: &Pubkey,
+    wsol_mint: &Pubkey,
+) -> Result<()> {
+    msg!("🔍 Verificando conta WSOL: {}", wsol_account.key());
+    
+    // Verificar se é uma conta de token válida
+    if wsol_account.owner != &spl_token::id() {
+        msg!("❌ WSOL account não é uma conta de token válida");
+        return Err(error!(ErrorCode::InvalidTokenAccount));
+    }
+    
+    // Deserializar e verificar dados da conta
+    match TokenAccount::try_deserialize(&mut &wsol_account.data.borrow()[..]) {
+        Ok(token_data) => {
+            if token_data.owner != *expected_owner {
+                msg!("❌ WSOL account owner mismatch. Expected: {}, Found: {}", expected_owner, token_data.owner);
+                return Err(error!(ErrorCode::InvalidWalletForATA));
+            }
+            
+            if token_data.mint != *wsol_mint {
+                msg!("❌ WSOL account mint mismatch. Expected: {}, Found: {}", wsol_mint, token_data.mint);
+                return Err(error!(ErrorCode::InvalidTokenMintAddress));
+            }
+            
+            msg!("✅ WSOL account verificada com sucesso: {} (balance: {})", wsol_account.key(), token_data.amount);
+        },
+        Err(e) => {
+            msg!("❌ Erro ao deserializar WSOL account: {:?}", e);
+            return Err(error!(ErrorCode::InvalidTokenAccount));
+        }
+    }
+    
+    Ok(())
+}
+
+// 🚀 FUNÇÃO PRINCIPAL: Processar depósito usando WSOL via remaining_accounts
+fn process_deposit_with_wsol_from_remaining<'info>(
     user_wallet: &Signer<'info>,
+    wsol_account: &AccountInfo<'info>,
+    wsol_mint: &AccountInfo<'info>,
     b_vault_lp: &AccountInfo<'info>,
     b_vault: &UncheckedAccount<'info>,
     b_token_vault: &AccountInfo<'info>,
     b_vault_lp_mint: &AccountInfo<'info>,
     vault_program: &UncheckedAccount<'info>,
     token_program: &Program<'info, Token>,
-    system_program: &Program<'info, System>,
     amount: u64,
 ) -> Result<()> {
-    msg!("🚀 TESTE: Depositando {} lamports SOL DIRETAMENTE na pool Meteora", amount);
+    msg!("🎯 PROCESSANDO DEPÓSITO: {} lamports usando WSOL from remaining_accounts", amount);
     
-    // Preparar dados da instrução de depósito
+    // 1. Verificar se a conta WSOL é válida
+    verify_wsol_account(wsol_account, &user_wallet.key(), &wsol_mint.key())?;
+    
+    // 2. Usar a função existente process_deposit_to_pool com WSOL
+    process_deposit_to_pool(
+        &user_wallet.to_account_info(),
+        wsol_account,
+        b_vault_lp,
+        b_vault,
+        b_token_vault,
+        b_vault_lp_mint,
+        vault_program,
+        token_program,
+        amount,
+    )?;
+    
+    msg!("✅ SUCESSO: Depósito na pool completado usando WSOL from remaining_accounts");
+    Ok(())
+}
+
+fn process_deposit_to_pool<'info>(
+    user: &AccountInfo<'info>,
+    user_source_token: &AccountInfo<'info>,
+    b_vault_lp: &AccountInfo<'info>,
+    b_vault: &UncheckedAccount<'info>,
+    b_token_vault: &AccountInfo<'info>,
+    b_vault_lp_mint: &AccountInfo<'info>,
+    vault_program: &UncheckedAccount<'info>,
+    token_program: &Program<'info, Token>,
+    amount: u64,
+) -> Result<()> {
+    let deposit_accounts = [
+        b_vault.to_account_info(),
+        b_token_vault.clone(),
+        b_vault_lp_mint.clone(),
+        user_source_token.clone(),
+        b_vault_lp.clone(),
+        user.clone(),
+        token_program.to_account_info(),
+    ];
+
     let mut deposit_data = Vec::with_capacity(24);
     deposit_data.extend_from_slice(&[242, 35, 198, 137, 82, 225, 242, 182]); // Deposit sighash
     deposit_data.extend_from_slice(&amount.to_le_bytes());
     deposit_data.extend_from_slice(&0u64.to_le_bytes()); // minimum_lp_token_amount = 0
 
-    // Estrutura das contas para depósito direto com SOL
-    let deposit_accounts = [
-        b_vault.to_account_info(),              // 0: vault
-        b_token_vault.clone(),                  // 1: token_vault 
-        b_vault_lp_mint.clone(),               // 2: lp_mint
-        user_wallet.to_account_info(),         // 3: source (SOL direto)
-        b_vault_lp.clone(),                    // 4: destination (LP tokens)
-        user_wallet.to_account_info(),         // 5: user/authority
-        token_program.to_account_info(),       // 6: token_program
-        system_program.to_account_info(),      // 7: system_program (para SOL)
-    ];
-
-    msg!("📋 Contas do depósito:");
-    msg!("  Vault: {}", b_vault.key());
-    msg!("  Token Vault: {}", b_token_vault.key());
-    msg!("  LP Mint: {}", b_vault_lp_mint.key());
-    msg!("  Source (SOL): {}", user_wallet.key());
-    msg!("  Destination (LP): {}", b_vault_lp.key());
-    msg!("  Authority: {}", user_wallet.key());
-
-    // Criar instrução de depósito
-    let instruction = solana_program::instruction::Instruction {
-        program_id: vault_program.key(),
-        accounts: vec![
-            solana_program::instruction::AccountMeta::new(b_vault.key(), false),
-            solana_program::instruction::AccountMeta::new(b_token_vault.key(), false),
-            solana_program::instruction::AccountMeta::new(b_vault_lp_mint.key(), false),
-            solana_program::instruction::AccountMeta::new(user_wallet.key(), true), // SOL source
-            solana_program::instruction::AccountMeta::new(b_vault_lp.key(), false),
-            solana_program::instruction::AccountMeta::new_readonly(user_wallet.key(), true),
-            solana_program::instruction::AccountMeta::new_readonly(token_program.key(), false),
-            solana_program::instruction::AccountMeta::new_readonly(system_program.key(), false),
-        ],
-        data: deposit_data,
-    };
-
-    // Executar a instrução
     solana_program::program::invoke(
-        &instruction,
+        &solana_program::instruction::Instruction {
+            program_id: vault_program.key(),
+            accounts: deposit_accounts.iter().enumerate().map(|(i, a)| {
+                if i == 5 {
+                    solana_program::instruction::AccountMeta::new_readonly(a.key(), true)
+                } else if i < 5 {
+                    solana_program::instruction::AccountMeta::new(a.key(), false)
+                } else {
+                    solana_program::instruction::AccountMeta::new_readonly(a.key(), false)
+                }
+            }).collect::<Vec<solana_program::instruction::AccountMeta>>(),
+            data: deposit_data,
+        },
         &deposit_accounts,
-    ).map_err(|e| {
-        msg!("❌ ERRO no depósito SOL direto: {:?}", e);
-        error!(ErrorCode::DepositToPoolFailed)
-    })?;
+    ).map_err(|_| error!(ErrorCode::DepositToPoolFailed))?;
     
-    msg!("✅ SUCESSO: Depósito SOL direto na pool completado!");
     Ok(())
 }
 
@@ -935,7 +993,7 @@ pub struct RegisterWithoutReferrerDeposit<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-// ESTRUTURA PRINCIPAL - SEM user_wsol_account
+// 🎯 ESTRUTURA PRINCIPAL - WSOL via remaining_accounts (SEM user_wsol_account)
 #[derive(Accounts)]
 #[instruction(deposit_amount: u64)]
 pub struct RegisterWithSolDeposit<'info> {
@@ -960,7 +1018,7 @@ pub struct RegisterWithSolDeposit<'info> {
     )]
     pub user: Account<'info, UserAccount>,
     
-    /// CHECK: This is the fixed WSOL mint address
+    /// CHECK: This is the fixed WSOL mint address - kept for reference
     pub wsol_mint: AccountInfo<'info>,
 
     /// CHECK: Pool account (PDA)
@@ -1094,7 +1152,6 @@ pub mod referral_system {
             &sync_accounts,
         ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
 
-        // Usar a função original process_deposit_to_pool para este caso
         process_deposit_to_pool(
             &ctx.accounts.user_wallet.to_account_info(),
             &ctx.accounts.user_source_token.to_account_info(),
@@ -1110,7 +1167,7 @@ pub mod referral_system {
         Ok(())
     }
 
-    // FUNÇÃO PRINCIPAL COM DEPÓSITO SOL DIRETO
+    // 🚀 FUNÇÃO PRINCIPAL - WSOL via remaining_accounts
     pub fn register_with_sol_deposit<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, RegisterWithSolDeposit<'info>>, 
         deposit_amount: u64
@@ -1119,10 +1176,12 @@ pub mod referral_system {
             return Err(error!(ErrorCode::ReferrerNotRegistered));
         }
 
-        if ctx.remaining_accounts.len() < VAULT_A_ACCOUNTS_COUNT + 2 {
+        // Verificar se temos contas mínimas necessárias nos remaining_accounts
+        if ctx.remaining_accounts.len() < VAULT_A_ACCOUNTS_COUNT + CHAINLINK_ACCOUNTS_COUNT {
             return Err(error!(ErrorCode::MissingVaultAAccounts));
         }
 
+        // Extrair contas Vault A (posições 0, 1, 2)
         let a_vault_lp = &ctx.remaining_accounts[0];
         let a_vault_lp_mint = &ctx.remaining_accounts[1];
         let a_token_vault = &ctx.remaining_accounts[2];
@@ -1133,6 +1192,7 @@ pub mod referral_system {
             &a_token_vault.key()
         )?;
 
+        // Extrair contas Chainlink (posições 3, 4)
         let chainlink_feed = &ctx.remaining_accounts[3];
         let chainlink_program = &ctx.remaining_accounts[4];
 
@@ -1209,28 +1269,38 @@ pub mod referral_system {
         user.reserved_sol = 0;
         user.reserved_tokens = 0;
 
-        // ===== LÓGICA DE SLOTS COM SOL DIRETO =====
+        // ===== 🎯 LÓGICA DE SLOTS OTIMIZADA COM WSOL VIA REMAINING_ACCOUNTS =====
         let slot_idx = ctx.accounts.referrer.chain.filled_slots as usize;
 
-        // SLOT 0 (SLOT 1): TESTE - Depósito SOL direto na pool
+        // SLOT 0 (SLOT 1 nos comentários): Usar WSOL da posição 5 nos remaining_accounts
         if slot_idx == 0 {
-            msg!("🧪 TESTE SLOT 0: Depositando SOL DIRETAMENTE na pool Meteora");
+            msg!("🎯 Processing SLOT 0 (SLOT 1): Using WSOL from remaining_accounts position {}", WSOL_ACCOUNT_POSITION);
             
-            process_sol_deposit_to_pool(
+            // Verificar se temos WSOL account na posição correta
+            if ctx.remaining_accounts.len() <= WSOL_ACCOUNT_POSITION {
+                msg!("❌ WSOL account missing at position {}", WSOL_ACCOUNT_POSITION);
+                return Err(error!(ErrorCode::MissingWsolAccount));
+            }
+            
+            let wsol_account = &ctx.remaining_accounts[WSOL_ACCOUNT_POSITION];
+            msg!("📋 WSOL account found at position {}: {}", WSOL_ACCOUNT_POSITION, wsol_account.key());
+            
+            process_deposit_with_wsol_from_remaining(
                 &ctx.accounts.user_wallet,
+                wsol_account,
+                &ctx.accounts.wsol_mint,
                 &ctx.accounts.b_vault_lp.to_account_info(),
                 &ctx.accounts.b_vault,
                 &ctx.accounts.b_token_vault.to_account_info(),
                 &ctx.accounts.b_vault_lp_mint.to_account_info(),
                 &ctx.accounts.vault_program,
                 &ctx.accounts.token_program,
-                &ctx.accounts.system_program,
                 deposit_amount,
             )?;
         } 
-        // SLOT 1 (SLOT 2): Reservar SOL e mintar tokens
+        // SLOT 1 (SLOT 2 nos comentários): Reservar SOL e mintar tokens (SEM WSOL)
         else if slot_idx == 1 {
-            msg!("Processing slot_idx 1 (SLOT 2) - reserving SOL and minting tokens");
+            msg!("Processing SLOT 1 (SLOT 2): Reserving SOL and minting tokens (no WSOL needed)");
             
             process_reserve_sol(
                 &ctx.accounts.user_wallet.to_account_info(),
@@ -1268,9 +1338,9 @@ pub mod referral_system {
             force_memory_cleanup();
             ctx.accounts.referrer.reserved_tokens = adjusted_token_amount;
         }
-        // SLOT 2 (SLOT 3): Pagar referrer e processar recursividade
+        // SLOT 2 (SLOT 3 nos comentários): Pagar referrer e processar recursividade (SEM WSOL inicial)
         else if slot_idx == 2 {
-            msg!("Processing slot_idx 2 (SLOT 3) - paying referrer and starting recursion");
+            msg!("Processing SLOT 2 (SLOT 3): Paying referrer and starting recursion");
             
             if ctx.accounts.referrer.reserved_sol > 0 {
                 verify_wallet_is_system_account(&ctx.accounts.referrer_wallet.to_account_info())?;
@@ -1324,14 +1394,15 @@ pub mod referral_system {
             state.next_chain_id += 1;
         }
 
-        // ===== RECURSIVIDADE COM SOL DIRETO =====
+        // ===== 🚀 RECURSIVIDADE COM WSOL VIA REMAINING_ACCOUNTS =====
         if chain_completed && slot_idx == 2 {
-            msg!("Starting recursion processing with direct SOL deposits");
+            msg!("🚀 Starting RECURSION processing with WSOL via remaining_accounts");
             
             let mut current_user_pubkey = upline_pubkey;
             let mut current_deposit = deposit_amount;
     
-            let upline_start_idx = VAULT_A_ACCOUNTS_COUNT + 2;
+            // As uplines começam após WSOL account (posição 6 em diante)
+            let upline_start_idx = WSOL_ACCOUNT_POSITION + 1;
     
             if ctx.remaining_accounts.len() > upline_start_idx && current_deposit > 0 {
                 let upline_accounts = &ctx.remaining_accounts[upline_start_idx..];
@@ -1382,7 +1453,7 @@ pub mod referral_system {
                         }
     
                         force_memory_cleanup();
-    
+
                         let upline_slot_idx = upline_account_data.chain.filled_slots as usize;
                         let upline_key = *upline_info.key;
                         
@@ -1409,28 +1480,43 @@ pub mod referral_system {
                         
                         upline_account_data.chain.filled_slots += 1;
                         
-                        // ===== LÓGICA FINANCEIRA NA RECURSIVIDADE COM SOL DIRETO =====
+                        // ===== 🎯 LÓGICA FINANCEIRA NA RECURSIVIDADE COM WSOL OTIMIZADA =====
                         if upline_slot_idx == 0 {
-                            msg!("🧪 RECURSION TESTE SLOT 0: Depositando SOL DIRETAMENTE na pool");
+                            msg!("🔄 RECURSION SLOT 0 (SLOT 1): Need WSOL for pool deposit - {} lamports", current_deposit);
                             
-                            // SLOT 0 na recursividade: Depósito SOL direto
-                            process_sol_deposit_to_pool(
-                                &ctx.accounts.user_wallet,
-                                &ctx.accounts.b_vault_lp.to_account_info(),
-                                &ctx.accounts.b_vault,
-                                &ctx.accounts.b_token_vault.to_account_info(),
-                                &ctx.accounts.b_vault_lp_mint.to_account_info(),
-                                &ctx.accounts.vault_program,
-                                &ctx.accounts.token_program,
-                                &ctx.accounts.system_program,
-                                current_deposit,
-                            )?;
+                            // Para slot 0 na recursividade, precisamos de WSOL
+                            // Verificar se temos WSOL account disponível
+                            if ctx.remaining_accounts.len() > WSOL_ACCOUNT_POSITION {
+                                let wsol_account = &ctx.remaining_accounts[WSOL_ACCOUNT_POSITION];
+                                
+                                msg!("📋 Using WSOL account from position {} for recursion: {}", WSOL_ACCOUNT_POSITION, wsol_account.key());
+                                
+                                // Verificar e usar WSOL para depósito na pool
+                                verify_wsol_account(wsol_account, &ctx.accounts.user_wallet.key(), &ctx.accounts.wsol_mint.key())?;
+                                
+                                process_deposit_to_pool(
+                                    &ctx.accounts.user_wallet.to_account_info(),
+                                    wsol_account,
+                                    &ctx.accounts.b_vault_lp.to_account_info(),
+                                    &ctx.accounts.b_vault,
+                                    &ctx.accounts.b_token_vault.to_account_info(),
+                                    &ctx.accounts.b_vault_lp_mint.to_account_info(),
+                                    &ctx.accounts.vault_program,
+                                    &ctx.accounts.token_program,
+                                    current_deposit,
+                                )?;
+                                
+                                msg!("✅ RECURSION: Pool deposit completed using WSOL");
+                            } else {
+                                msg!("⚠️ WSOL account not available for recursion, skipping pool deposit");
+                            }
                             
-                            current_deposit = 0;
+                            current_deposit = 0; // Para a recursividade após usar no slot 0
                         } 
                         else if upline_slot_idx == 1 {
-                            msg!("Recursion upline_slot_idx 1 (SLOT 2) - reserving SOL and minting tokens");
+                            msg!("🔄 RECURSION SLOT 1 (SLOT 2): Reserving SOL and minting tokens (no WSOL needed)");
                             
+                            // SLOT 1 na recursividade: Reservar SOL (SEM WSOL)
                             process_reserve_sol(
                                 &ctx.accounts.user_wallet.to_account_info(),
                                 &ctx.accounts.program_sol_vault.to_account_info(),
@@ -1463,15 +1549,16 @@ pub mod referral_system {
                                     &[ctx.bumps.token_mint_authority]
                                 ]],
                             )?;
-    
+
                             force_memory_cleanup();
                             
                             upline_account_data.reserved_tokens = adjusted_token_amount;
-                            current_deposit = 0;
+                            current_deposit = 0; // Para a recursividade após usar no slot 1
                         }
                         else if upline_slot_idx == 2 {
-                            msg!("Recursion upline_slot_idx 2 (SLOT 3) - paying upline");
+                            msg!("🔄 RECURSION SLOT 2 (SLOT 3): Paying upline (no WSOL needed)");
                             
+                            // SLOT 2 na recursividade: Pagar upline (SEM WSOL)
                             if upline_account_data.reserved_sol > 0 {
                                 let reserved_sol = upline_account_data.reserved_sol;
                                 
@@ -1523,6 +1610,7 @@ pub mod referral_system {
                                 force_memory_cleanup();
                                 upline_account_data.reserved_tokens = 0;
                             }
+                            // Continua recursividade (não break aqui)
                         }
                         
                         let chain_completed = upline_account_data.chain.filled_slots == 3;
@@ -1543,7 +1631,7 @@ pub mod referral_system {
                             let mut write_data = &mut data[8..];
                             upline_account_data.serialize(&mut write_data)?;
                         }
-    
+
                         force_memory_cleanup();
                         
                         if !chain_completed {
@@ -1560,73 +1648,40 @@ pub mod referral_system {
                     }
                 }
 
-                // ===== TRATAMENTO DE DEPÓSITO RESTANTE COM SOL DIRETO =====
+                // ===== 🎯 TRATAMENTO DE DEPÓSITO RESTANTE COM WSOL OTIMIZADA =====
                 if current_deposit > 0 {
-                    msg!("🧪 TESTE DEPÓSITO RESTANTE: {} lamports SOL direto na pool", current_deposit);
+                    msg!("💰 Processing REMAINING DEPOSIT: {} lamports - needs WSOL for pool", current_deposit);
                     
-                    process_sol_deposit_to_pool(
-                        &ctx.accounts.user_wallet,
-                        &ctx.accounts.b_vault_lp.to_account_info(),
-                        &ctx.accounts.b_vault,
-                        &ctx.accounts.b_token_vault.to_account_info(),
-                        &ctx.accounts.b_vault_lp_mint.to_account_info(),
-                        &ctx.accounts.vault_program,
-                        &ctx.accounts.token_program,
-                        &ctx.accounts.system_program,
-                        current_deposit,
-                    )?;
+                    // Verificar se temos WSOL account disponível para depósito restante
+                    if ctx.remaining_accounts.len() > WSOL_ACCOUNT_POSITION {
+                        let wsol_account = &ctx.remaining_accounts[WSOL_ACCOUNT_POSITION];
+                        
+                        msg!("📋 Using WSOL account from position {} for remaining deposit: {}", WSOL_ACCOUNT_POSITION, wsol_account.key());
+                        
+                        // Verificar e usar WSOL para depósito restante na pool
+                        verify_wsol_account(wsol_account, &ctx.accounts.user_wallet.key(), &ctx.accounts.wsol_mint.key())?;
+                        
+                        process_deposit_to_pool(
+                            &ctx.accounts.user_wallet.to_account_info(),
+                            wsol_account,
+                            &ctx.accounts.b_vault_lp.to_account_info(),
+                            &ctx.accounts.b_vault,
+                            &ctx.accounts.b_token_vault.to_account_info(),
+                            &ctx.accounts.b_vault_lp_mint.to_account_info(),
+                            &ctx.accounts.vault_program,
+                            &ctx.accounts.token_program,
+                            current_deposit,
+                        )?;
+                        
+                        msg!("✅ REMAINING DEPOSIT: Pool deposit completed using WSOL");
+                    } else {
+                        msg!("⚠️ WSOL account not available for remaining deposit, skipping");
+                    }
                 }
             }
         }
-    
-        msg!("✅ Registration completed successfully with direct SOL deposits!");
+
+        msg!("🎉 Registration completed successfully with WSOL via remaining_accounts optimization!");
         Ok(())
     }
-}
-
-// FUNÇÃO AUXILIAR: process_deposit_to_pool ORIGINAL (para compatibilidade)
-fn process_deposit_to_pool<'info>(
-    user: &AccountInfo<'info>,
-    user_source_token: &AccountInfo<'info>,
-    b_vault_lp: &AccountInfo<'info>,
-    b_vault: &UncheckedAccount<'info>,
-    b_token_vault: &AccountInfo<'info>,
-    b_vault_lp_mint: &AccountInfo<'info>,
-    vault_program: &UncheckedAccount<'info>,
-    token_program: &Program<'info, Token>,
-    amount: u64,
-) -> Result<()> {
-    let deposit_accounts = [
-        b_vault.to_account_info(),
-        b_token_vault.clone(),
-        b_vault_lp_mint.clone(),
-        user_source_token.clone(),
-        b_vault_lp.clone(),
-        user.clone(),
-        token_program.to_account_info(),
-    ];
-
-    let mut deposit_data = Vec::with_capacity(24);
-    deposit_data.extend_from_slice(&[242, 35, 198, 137, 82, 225, 242, 182]); // Deposit sighash
-    deposit_data.extend_from_slice(&amount.to_le_bytes());
-    deposit_data.extend_from_slice(&0u64.to_le_bytes()); // minimum_lp_token_amount = 0
-
-    solana_program::program::invoke(
-        &solana_program::instruction::Instruction {
-            program_id: vault_program.key(),
-            accounts: deposit_accounts.iter().enumerate().map(|(i, a)| {
-                if i == 5 {
-                    solana_program::instruction::AccountMeta::new_readonly(a.key(), true)
-                } else if i < 5 {
-                    solana_program::instruction::AccountMeta::new(a.key(), false)
-                } else {
-                    solana_program::instruction::AccountMeta::new_readonly(a.key(), false)
-                }
-            }).collect::<Vec<solana_program::instruction::AccountMeta>>(),
-            data: deposit_data,
-        },
-        &deposit_accounts,
-    ).map_err(|_| error!(ErrorCode::DepositToPoolFailed))?;
-    
-    Ok(())
 }
