@@ -419,6 +419,7 @@ fn get_donut_tokens_amount<'info>(
             Ok(data) => data,
             Err(_) => {
                 msg!("Error reading LP data");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         };
@@ -427,6 +428,7 @@ fn get_donut_tokens_amount<'info>(
             Ok(data) => data,
             Err(_) => {
                 msg!("Error reading LP data");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         };
@@ -447,6 +449,7 @@ fn get_donut_tokens_amount<'info>(
             Ok(data) => data,
             Err(_) => {
                 msg!("Error reading LP mint data");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         };
@@ -455,6 +458,7 @@ fn get_donut_tokens_amount<'info>(
             Ok(data) => data,
             Err(_) => {
                 msg!("Error reading LP mint data");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         };
@@ -475,6 +479,7 @@ fn get_donut_tokens_amount<'info>(
             Ok(data) => data,
             Err(_) => {
                 msg!("Error reading token vault data");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         };
@@ -483,6 +488,7 @@ fn get_donut_tokens_amount<'info>(
             Ok(data) => data,
             Err(_) => {
                 msg!("Error reading token vault data");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         };
@@ -497,6 +503,7 @@ fn get_donut_tokens_amount<'info>(
     // 4. Check for zero values to avoid division by zero
     if a_vault_lp_supply == 0 || b_vault_lp_supply == 0 || total_token_a_amount == 0 || total_token_b_amount == 0 {
         msg!("Zero values detected, using fallback");
+        //return Ok(100 * 1_000_000_000);
         return Ok(100);
     }
     
@@ -515,11 +522,13 @@ fn get_donut_tokens_amount<'info>(
             Some(result) => result,
             None => {
                 msg!("Division by zero in pool_token_a calculation");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         },
         None => {
             msg!("Overflow in pool_token_a calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -529,11 +538,13 @@ fn get_donut_tokens_amount<'info>(
             Some(result) => result,
             None => {
                 msg!("Division by zero in pool_token_b calculation");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         },
         None => {
             msg!("Overflow in pool_token_b calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -543,6 +554,7 @@ fn get_donut_tokens_amount<'info>(
     // 7. Check for zero values
     if pool_token_a == 0 || pool_token_b == 0 {
         msg!("Zero pool tokens, using fallback");
+        //return Ok(100 * 1_000_000_000);
         return Ok(100);
     }
     
@@ -552,11 +564,13 @@ fn get_donut_tokens_amount<'info>(
             Some(result) => result,
             None => {
                 msg!("Division by zero in basic_ratio calculation");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         },
         None => {
             msg!("Overflow in basic_ratio calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -570,6 +584,7 @@ fn get_donut_tokens_amount<'info>(
                 Some(val) => val,
                 None => {
                     msg!("Underflow in fee denominator calculation");
+                    //return Ok(100 * 1_000_000_000);
                     return Ok(100);
                 }
             };
@@ -578,12 +593,14 @@ fn get_donut_tokens_amount<'info>(
                 Some(result) => result,
                 None => {
                     msg!("Division by zero in fee_multiplier calculation");
+                    //return Ok(100 * 1_000_000_000);
                     return Ok(100);
                 }
             }
         },
         None => {
             msg!("Overflow in fee_multiplier calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -596,11 +613,13 @@ fn get_donut_tokens_amount<'info>(
             Some(result) => result,
             None => {
                 msg!("Division by zero in fee_adjusted_ratio calculation");
+                //return Ok(100 * 1_000_000_000);
                 return Ok(100);
             }
         },
         None => {
             msg!("Overflow in fee_adjusted_ratio calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -612,6 +631,7 @@ fn get_donut_tokens_amount<'info>(
         Some(result) => result,
         None => {
             msg!("Overflow in donut_tokens_scaled calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -623,6 +643,7 @@ fn get_donut_tokens_amount<'info>(
         Some(result) => result,
         None => {
             msg!("Division by zero in donut_tokens_big calculation");
+            //return Ok(100 * 1_000_000_000);
             return Ok(100);
         }
     };
@@ -632,6 +653,7 @@ fn get_donut_tokens_amount<'info>(
     //13. Check for overflow to u64
     if donut_tokens_big > i128::from(u64::MAX) {
         msg!("donut_tokens_big exceeds u64::MAX");
+        //return Ok(100 * 1_000_000_000);
         return Ok(100);
     }
 
@@ -649,6 +671,7 @@ fn get_donut_tokens_amount<'info>(
         }
         
         msg!("donut_tokens is zero, using fallback");
+        //return Ok(100 * 1_000_000_000);
         return Ok(100);
     }
     
@@ -975,143 +998,6 @@ fn process_referrer_chain<'info>(
    Ok((false, referrer.key()))
 }
 
-// FUNÇÃO CORRIGIDA para criar WSOL e depositar
-fn create_wsol_and_deposit<'info>(
-    user_wallet: &Signer<'info>,
-    wsol_mint: &AccountInfo<'info>,
-    b_vault_lp: &AccountInfo<'info>,
-    b_vault: &UncheckedAccount<'info>,
-    b_token_vault: &AccountInfo<'info>,
-    b_vault_lp_mint: &AccountInfo<'info>,
-    vault_program: &UncheckedAccount<'info>,
-    token_program: &Program<'info, Token>,
-    system_program: &Program<'info, System>,
-    rent: &Sysvar<'info, Rent>,
-    amount: u64,
-) -> Result<()> {
-    msg!("Creating temporary WSOL account for {} lamports", amount);
-    
-    // 1. Deriva endereço da ATA WSOL
-    let wsol_ata = anchor_spl::associated_token::get_associated_token_address(
-        &user_wallet.key(),
-        &wsol_mint.key()
-    );
-    
-    // 2. Calcula rent exempt
-    let rent_exempt_amount = rent.minimum_balance(spl_token::state::Account::LEN);
-    
-    // 3. Cria ATA WSOL usando system program
-    let create_account_ix = solana_program::system_instruction::create_account(
-        &user_wallet.key(),
-        &wsol_ata,
-        rent_exempt_amount,
-        spl_token::state::Account::LEN as u64,
-        &spl_token::id(),
-    );
-    
-    solana_program::program::invoke(
-        &create_account_ix,
-        &[user_wallet.to_account_info()],
-    ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
-    
-    // 4. Inicializa a conta como ATA
-    let init_account_ix = spl_token::instruction::initialize_account(
-        &token_program.key(),
-        &wsol_ata,
-        &wsol_mint.key(),
-        &user_wallet.key(),
-    ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
-    
-    solana_program::program::invoke(
-        &init_account_ix,
-        &[
-            token_program.to_account_info(),
-            wsol_mint.clone(),
-            user_wallet.to_account_info(),
-        ],
-    ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
-    
-    // 5. Transfer SOL adicional para WSOL account
-    if amount > 0 {
-        let transfer_ix = solana_program::system_instruction::transfer(
-            &user_wallet.key(),
-            &wsol_ata,
-            amount,
-        );
-        
-        solana_program::program::invoke(
-            &transfer_ix,
-            &[user_wallet.to_account_info()],
-        ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
-    }
-    
-    // 6. Sync native
-    let sync_ix = spl_token::instruction::sync_native(&token_program.key(), &wsol_ata)?;
-    
-    solana_program::program::invoke(
-        &sync_ix,
-        &[token_program.to_account_info()],
-    ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
-    
-    // 7. Deposita na pool usando processo simplificado
-    // Como não podemos passar AccountInfo dinâmico, usamos a função existente com adaptação
-    let mut deposit_data = Vec::with_capacity(24);
-    deposit_data.extend_from_slice(&[242, 35, 198, 137, 82, 225, 242, 182]); // Deposit sighash
-    deposit_data.extend_from_slice(&amount.to_le_bytes());
-    deposit_data.extend_from_slice(&0u64.to_le_bytes()); // minimum_lp_token_amount = 0
-
-    let deposit_ix = solana_program::instruction::Instruction {
-        program_id: vault_program.key(),
-        accounts: vec![
-            solana_program::instruction::AccountMeta::new(b_vault.key(), false),
-            solana_program::instruction::AccountMeta::new(b_token_vault.key(), false),
-            solana_program::instruction::AccountMeta::new(b_vault_lp_mint.key(), false),
-            solana_program::instruction::AccountMeta::new(wsol_ata, false),
-            solana_program::instruction::AccountMeta::new(b_vault_lp.key(), false),
-            solana_program::instruction::AccountMeta::new_readonly(user_wallet.key(), true),
-            solana_program::instruction::AccountMeta::new_readonly(token_program.key(), false),
-        ],
-        data: deposit_data,
-    };
-
-    // Como não temos AccountInfo para wsol_ata, vamos usar CPIContext simplificado
-    // Nota: Esta parte precisa ser adaptada conforme a implementação específica do Meteora
-    let deposit_accounts = [
-        b_vault.to_account_info(),
-        b_token_vault.clone(),
-        b_vault_lp_mint.clone(),
-        b_vault_lp.clone(),
-        user_wallet.to_account_info(),
-        token_program.to_account_info(),
-    ];
-
-    // Executa o depósito (versão simplificada)
-    solana_program::program::invoke(
-        &deposit_ix,
-        &deposit_accounts,
-    ).map_err(|_| error!(ErrorCode::DepositToPoolFailed))?;
-    
-    // 8. Fecha WSOL account
-    let close_ix = spl_token::instruction::close_account(
-        &token_program.key(),
-        &wsol_ata,
-        &user_wallet.key(),
-        &user_wallet.key(),
-        &[],
-    )?;
-    
-    solana_program::program::invoke(
-        &close_ix,
-        &[
-            token_program.to_account_info(),
-            user_wallet.to_account_info(),
-        ],
-    ).map_err(|_| error!(ErrorCode::UnwrapSolFailed))?;
-    
-    msg!("WSOL account created, used, and closed successfully");
-    Ok(())
-}
-
 // Accounts for initialize instruction
 #[derive(Accounts)]
 pub struct Initialize<'info> {
@@ -1126,6 +1012,7 @@ pub struct Initialize<'info> {
     pub system_program: Program<'info, System>,
 }
 
+// Accounts for registration without referrer with deposit
 // Accounts for registration without referrer with deposit
 #[derive(Accounts)]
 #[instruction(deposit_amount: u64)]
@@ -1148,7 +1035,7 @@ pub struct RegisterWithoutReferrerDeposit<'info> {
     )]
     pub user: Account<'info, UserAccount>,
 
-    /// CHECK: User token account for Wrapped SOL, verified in the instruction code
+/// CHECK: User token account for Wrapped SOL, verified in the instruction code
     #[account(mut)]
     pub user_source_token: UncheckedAccount<'info>,
     
@@ -1192,7 +1079,8 @@ pub struct RegisterWithoutReferrerDeposit<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-// ESTRUTURA CORRIGIDA - user_wsol_account REMOVIDO
+// Structure for registration with SOL in a single transaction
+// Now includes Chainlink accounts and remaining_accounts
 #[derive(Accounts)]
 #[instruction(deposit_amount: u64)]
 pub struct RegisterWithSolDeposit<'info> {
@@ -1218,8 +1106,17 @@ pub struct RegisterWithSolDeposit<'info> {
         bump
     )]
     pub user: Account<'info, UserAccount>,
+
+    // New WSOL ATA account
+    #[account(
+        init,
+        payer = user_wallet,
+        associated_token::mint = wsol_mint,
+        associated_token::authority = user_wallet
+    )]
+    pub user_wsol_account: Account<'info, TokenAccount>,
     
-    // WSOL mint - mantido apenas para referência
+    // WSOL mint
     /// CHECK: This is the fixed WSOL mint address
     pub wsol_mint: AccountInfo<'info>,
 
@@ -1313,81 +1210,81 @@ pub mod referral_system {
         Ok(())
     }
     
-    // Register without a referrer (multisig treasury or owner only)
-    pub fn register_without_referrer(ctx: Context<RegisterWithoutReferrerDeposit>, deposit_amount: u64) -> Result<()> {
-        // Verify if the caller is the multisig treasury
-        if ctx.accounts.owner.key() != ctx.accounts.state.multisig_treasury {
-            return Err(error!(ErrorCode::NotAuthorized));
-        }
-       
-        // STRICT VERIFICATION OF ALL ADDRESSES
-        verify_all_fixed_addresses(
-            &ctx.accounts.pool.key(),
-            &ctx.accounts.b_vault_lp.key(),
-            &ctx.accounts.token_mint.key(),
-            &verified_addresses::WSOL_MINT,
-        )?;
-
-        // Use global upline ID
-        let state = &mut ctx.accounts.state;
-        let upline_id = state.next_upline_id;
-        let chain_id = state.next_chain_id;
-
-        state.next_upline_id += 1;
-        state.next_chain_id += 1;
-
-        // Create new user data
-        let user = &mut ctx.accounts.user;
-
-        // Initialize user data with an empty upline structure
-        user.is_registered = true;
-        user.referrer = None;
-        user.owner_wallet = ctx.accounts.user_wallet.key();
-        user.upline = ReferralUpline {
-            id: upline_id,
-            depth: 1,
-            upline: vec![],
-        };
-        user.chain = ReferralChain {
-            id: chain_id,
-            slots: [None, None, None],
-            filled_slots: 0,
-        };
-        
-        // Initialize financial data
-        user.reserved_sol = 0;
-        user.reserved_tokens = 0;
-
-        // Sync the WSOL account 
-        let sync_native_ix = spl_token::instruction::sync_native(
-            &token::ID,
-            &ctx.accounts.user_source_token.key(),
-        )?;
-        
-        let sync_accounts = [ctx.accounts.user_source_token.to_account_info()];
-        
-        solana_program::program::invoke(
-            &sync_native_ix,
-            &sync_accounts,
-        ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
-
-        // Deposit to liquidity pool
-        process_deposit_to_pool(
-            &ctx.accounts.user_wallet.to_account_info(),
-            &ctx.accounts.user_source_token.to_account_info(),
-            &ctx.accounts.b_vault_lp.to_account_info(),
-            &ctx.accounts.b_vault,
-            &ctx.accounts.b_token_vault.to_account_info(),
-            &ctx.accounts.b_vault_lp_mint.to_account_info(),
-            &ctx.accounts.vault_program,
-            &ctx.accounts.token_program,
-            deposit_amount
-        )?;
-
-        Ok(())
+ // Register without a referrer (multisig treasury or owner only)
+ pub fn register_without_referrer(ctx: Context<RegisterWithoutReferrerDeposit>, deposit_amount: u64) -> Result<()> {
+    // Verify if the caller is the multisig treasury
+    if ctx.accounts.owner.key() != ctx.accounts.state.multisig_treasury {
+        return Err(error!(ErrorCode::NotAuthorized));
     }
+   
+    // STRICT VERIFICATION OF ALL ADDRESSES
+    verify_all_fixed_addresses(
+        &ctx.accounts.pool.key(),
+        &ctx.accounts.b_vault_lp.key(),
+        &ctx.accounts.token_mint.key(),
+        &verified_addresses::WSOL_MINT,
+    )?;
 
-    // FUNÇÃO PRINCIPAL CORRIGIDA - Register user with SOL in a single transaction
+    // Use global upline ID
+    let state = &mut ctx.accounts.state;
+    let upline_id = state.next_upline_id;
+    let chain_id = state.next_chain_id;
+
+    state.next_upline_id += 1;
+    state.next_chain_id += 1;
+
+    // Create new user data
+    let user = &mut ctx.accounts.user;
+
+    // Initialize user data with an empty upline structure
+    user.is_registered = true;
+    user.referrer = None;
+    user.owner_wallet = ctx.accounts.user_wallet.key();
+    user.upline = ReferralUpline {
+        id: upline_id,
+        depth: 1,
+        upline: vec![],
+    };
+    user.chain = ReferralChain {
+        id: chain_id,
+        slots: [None, None, None],
+        filled_slots: 0,
+    };
+    
+    // Initialize financial data
+    user.reserved_sol = 0;
+    user.reserved_tokens = 0;
+
+    // Sync the WSOL account 
+    let sync_native_ix = spl_token::instruction::sync_native(
+        &token::ID,
+        &ctx.accounts.user_source_token.key(),
+    )?;
+    
+    let sync_accounts = [ctx.accounts.user_source_token.to_account_info()];
+    
+    solana_program::program::invoke(
+        &sync_native_ix,
+        &sync_accounts,
+    ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
+
+    // Deposit to liquidity pool
+    process_deposit_to_pool(
+        &ctx.accounts.user_wallet.to_account_info(),
+        &ctx.accounts.user_source_token.to_account_info(),
+        &ctx.accounts.b_vault_lp.to_account_info(),
+        &ctx.accounts.b_vault,
+        &ctx.accounts.b_token_vault.to_account_info(),
+        &ctx.accounts.b_vault_lp_mint.to_account_info(),
+        &ctx.accounts.vault_program,
+        &ctx.accounts.token_program,
+        deposit_amount
+    )?;
+
+    Ok(())
+}
+
+    // Register user with SOL in a single transaction - Modified to use remaining_accounts
     pub fn register_with_sol_deposit<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, RegisterWithSolDeposit<'info>>, deposit_amount: u64) -> Result<()> {
         // Check if referrer is registered
         if !ctx.accounts.referrer.is_registered {
@@ -1448,13 +1345,43 @@ pub mod referral_system {
             &ctx.accounts.token_mint.key()
         )?;
         
-        // Create the new UplineEntry structure for the referrer
+        // 1. Transfer SOL to WSOL (wrap)
+        let transfer_ix = solana_program::system_instruction::transfer(
+            &ctx.accounts.user_wallet.key(),
+            &ctx.accounts.user_wsol_account.key(),
+            deposit_amount
+        );
+        
+        let wrap_accounts = [
+            ctx.accounts.user_wallet.to_account_info(),
+            ctx.accounts.user_wsol_account.to_account_info(),
+        ];
+        
+        solana_program::program::invoke(
+            &transfer_ix,
+            &wrap_accounts,
+        ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
+        
+        // 2. Sync the WSOL account
+        let sync_native_ix = spl_token::instruction::sync_native(
+            &token::ID,
+            &ctx.accounts.user_wsol_account.key(),
+        )?;
+        
+        let sync_accounts = [ctx.accounts.user_wsol_account.to_account_info()];
+        
+        solana_program::program::invoke(
+            &sync_native_ix,
+            &sync_accounts,
+        ).map_err(|_| error!(ErrorCode::WrapSolFailed))?;
+        
+        // 3. Create the new UplineEntry structure for the referrer
         let referrer_entry = UplineEntry {
             pda: ctx.accounts.referrer.key(),
             wallet: ctx.accounts.referrer_wallet.key(),
         };
         
-        // Create the user's upline by copying the referrer's upline and adding the referrer
+        // 4. Create the user's upline by copying the referrer's upline and adding the referrer
         let mut new_upline = Vec::new();
         
         // OPTIMIZATION - Try to reserve exact capacity to avoid reallocations
@@ -1479,7 +1406,7 @@ pub mod referral_system {
         // OPTIMIZATION - Reduce capacity to current size
         new_upline.shrink_to_fit();
 
-        // Get upline ID from global counter
+        // 5. Get upline ID from global counter
         let state = &mut ctx.accounts.state;
         let upline_id = state.next_upline_id;
         let chain_id = state.next_chain_id;
@@ -1487,7 +1414,7 @@ pub mod referral_system {
         state.next_upline_id += 1; // Increment for next user
         state.next_chain_id += 1;
 
-        // Create new user data
+        // 6. Create new user data
         let user = &mut ctx.accounts.user;
 
         user.is_registered = true;
@@ -1504,393 +1431,522 @@ pub mod referral_system {
             filled_slots: 0,
         };
         
-// Initialize user financial data
-user.reserved_sol = 0;
-user.reserved_tokens = 0;
+        // Initialize user financial data
+        user.reserved_sol = 0;
+        user.reserved_tokens = 0;
 
-// ===== LÓGICA FINANCEIRA CORRIGIDA =====
-// Determine which slot we're filling in the referrer's matrix
-let slot_idx = ctx.accounts.referrer.chain.filled_slots as usize;
+        // ===== FINANCIAL LOGIC =====
+        // Determine which slot we're filling in the referrer's matrix
+        let slot_idx = ctx.accounts.referrer.chain.filled_slots as usize;
 
-// SLOT 0 (SLOT 1 nos comentários): Criar WSOL e depositar na pool
-if slot_idx == 0 {
-    msg!("Processing slot_idx 0 (SLOT 1) - creating WSOL and depositing to pool");
-    
-    create_wsol_and_deposit(
-        &ctx.accounts.user_wallet,
-        &ctx.accounts.wsol_mint,
-        &ctx.accounts.b_vault_lp.to_account_info(),
-        &ctx.accounts.b_vault,
-        &ctx.accounts.b_token_vault.to_account_info(),
-        &ctx.accounts.b_vault_lp_mint.to_account_info(),
-        &ctx.accounts.vault_program,
-        &ctx.accounts.token_program,
-        &ctx.accounts.system_program,
-        &ctx.accounts.rent,
-        deposit_amount,
-    )?;
-} 
-// SLOT 1 (SLOT 2 nos comentários): Reservar SOL e mintar tokens (SEM WSOL)
-else if slot_idx == 1 {
-    msg!("Processing slot_idx 1 (SLOT 2) - reserving SOL and minting tokens");
-    
-    process_reserve_sol(
-        &ctx.accounts.user_wallet.to_account_info(),
-        &ctx.accounts.program_sol_vault.to_account_info(),
-        deposit_amount
-    )?;
-    
-    ctx.accounts.referrer.reserved_sol = deposit_amount;
-    
-    let token_amount = get_donut_tokens_amount(
-        a_vault_lp,
-        &ctx.accounts.b_vault_lp.to_account_info(),
-        a_vault_lp_mint,
-        &ctx.accounts.b_vault_lp_mint.to_account_info(),
-        a_token_vault,
-        &ctx.accounts.b_token_vault.to_account_info(),
-        deposit_amount
-    )?;
-    
-    let adjusted_token_amount = check_mint_limit(state, token_amount)?;
-    force_memory_cleanup();
-    
-    process_mint_tokens(
-        &ctx.accounts.token_mint.to_account_info(),
-        &ctx.accounts.program_token_vault.to_account_info(),
-        &ctx.accounts.token_mint_authority.to_account_info(),
-        &ctx.accounts.token_program,
-        adjusted_token_amount,
-        &[&[
-            b"token_mint_authority".as_ref(),
-            &[ctx.bumps.token_mint_authority]
-        ]],
-    )?;
-
-    force_memory_cleanup();
-    ctx.accounts.referrer.reserved_tokens = adjusted_token_amount;
-}
-// SLOT 2 (SLOT 3 nos comentários): Pagar referrer e processar recursividade (SEM WSOL)
-else if slot_idx == 2 {
-    msg!("Processing slot_idx 2 (SLOT 3) - paying referrer and starting recursion");
-    
-    if ctx.accounts.referrer.reserved_sol > 0 {
-        verify_wallet_is_system_account(&ctx.accounts.referrer_wallet.to_account_info())?;
-        
-        process_pay_referrer(
-            &ctx.accounts.program_sol_vault.to_account_info(),
-            &ctx.accounts.referrer_wallet.to_account_info(),
-            ctx.accounts.referrer.reserved_sol,
-            &[&[
-                b"program_sol_vault".as_ref(),
-                &[ctx.bumps.program_sol_vault]
-            ]],
-        )?;
-        
-        ctx.accounts.referrer.reserved_sol = 0;
-    }
-    
-    verify_token_account(
-        &ctx.accounts.referrer_token_account.to_account_info(),
-        &ctx.accounts.referrer_wallet.key(),
-        &ctx.accounts.token_mint.key()
-    )?;
-    
-    if ctx.accounts.referrer.reserved_tokens > 0 {
-        process_transfer_tokens(
-            &ctx.accounts.program_token_vault.to_account_info(),
-            &ctx.accounts.referrer_token_account.to_account_info(),
-            &ctx.accounts.vault_authority.to_account_info(),
-            &ctx.accounts.token_program,
-            ctx.accounts.referrer.reserved_tokens,
-            &[&[
-                b"token_vault_authority".as_ref(),
-                &[ctx.bumps.vault_authority]
-            ]],
-        )?;
-        
-        force_memory_cleanup();
-        ctx.accounts.referrer.reserved_tokens = 0;
-    }
-}
-
-// Processar matriz do referrer
-let (chain_completed, upline_pubkey) = process_referrer_chain(
-    &ctx.accounts.user_wallet.key(),
-    &mut ctx.accounts.referrer,
-    state.next_chain_id,
-)?;
-
-force_memory_cleanup();
-
-if chain_completed {
-    state.next_chain_id += 1;
-}
-
-// ===== RECURSIVIDADE CORRIGIDA =====
-if chain_completed && slot_idx == 2 {
-    msg!("Starting recursion processing");
-    
-    let mut current_user_pubkey = upline_pubkey;
-    let mut current_deposit = deposit_amount;
-
-    let upline_start_idx = VAULT_A_ACCOUNTS_COUNT + 2;
-
-    if ctx.remaining_accounts.len() > upline_start_idx && current_deposit > 0 {
-        let upline_accounts = &ctx.remaining_accounts[upline_start_idx..];
-        
-        if upline_accounts.len() % 3 != 0 {
-            return Err(error!(ErrorCode::MissingUplineAccount));
-        }
-        
-        let trio_count = upline_accounts.len() / 3;
-        const BATCH_SIZE: usize = 1; 
-        let batch_count = (trio_count + BATCH_SIZE - 1) / BATCH_SIZE;
-        
-        for batch_idx in 0..batch_count {
-            let start_trio = batch_idx * BATCH_SIZE;
-            let end_trio = std::cmp::min(start_trio + BATCH_SIZE, trio_count);
-            
-            for trio_index in start_trio..end_trio {
-                if trio_index >= MAX_UPLINE_DEPTH || current_deposit == 0 {
-                    break;
-                }
-
-                let base_idx = trio_index * 3;
-                let upline_info = &upline_accounts[base_idx];
-                let upline_wallet = &upline_accounts[base_idx + 1];
-                let upline_token = &upline_accounts[base_idx + 2];
-                
-                if upline_wallet.owner != &solana_program::system_program::ID {
-                    return Err(error!(ErrorCode::PaymentWalletInvalid));
-                }
-                
-                if !upline_info.owner.eq(&crate::ID) {
-                    return Err(error!(ErrorCode::InvalidSlotOwner));
-                }
-
-                let mut upline_account_data;
-                {
-                    let data = upline_info.try_borrow_data()?;
-                    if data.len() <= 8 {
-                        return Err(ProgramError::InvalidAccountData.into());
-                    }
-
-                    let mut account_slice = &data[8..];
-                    upline_account_data = UserAccount::deserialize(&mut account_slice)?;
-
-                    if !upline_account_data.is_registered {
-                        return Err(error!(ErrorCode::SlotNotRegistered));
-                    }
-                }
-
-                force_memory_cleanup();
-
-                let upline_slot_idx = upline_account_data.chain.filled_slots as usize;
-                let upline_key = *upline_info.key;
-                
-                if upline_slot_idx == 2 {
-                    if upline_token.owner != &spl_token::id() {
-                        return Err(error!(ErrorCode::TokenAccountInvalid));
-                    }
-                    
-                    verify_token_account(
-                        upline_token,
-                        &upline_wallet.key(),
-                        &ctx.accounts.token_mint.key()
-                    )?;
-                }
-                
-                upline_account_data.chain.slots[upline_slot_idx] = Some(current_user_pubkey);
-                
-                emit!(SlotFilled {
-                    slot_idx: upline_slot_idx as u8,
-                    chain_id: upline_account_data.chain.id,
-                    user: current_user_pubkey,
-                    owner: upline_key,
-                });
-                
-                upline_account_data.chain.filled_slots += 1;
-                
-                // ===== LÓGICA FINANCEIRA NA RECURSIVIDADE CORRIGIDA =====
-                if upline_slot_idx == 0 {
-                    msg!("Recursion upline_slot_idx 0 (SLOT 1) - creating WSOL and depositing to pool");
-                    
-                    // SLOT 0 na recursividade: Criar WSOL e depositar
-                    create_wsol_and_deposit(
-                        &ctx.accounts.user_wallet,
-                        &ctx.accounts.wsol_mint,
-                        &ctx.accounts.b_vault_lp.to_account_info(),
-                        &ctx.accounts.b_vault,
-                        &ctx.accounts.b_token_vault.to_account_info(),
-                        &ctx.accounts.b_vault_lp_mint.to_account_info(),
-                        &ctx.accounts.vault_program,
-                        &ctx.accounts.token_program,
-                        &ctx.accounts.system_program,
-                        &ctx.accounts.rent,
-                        current_deposit,
-                    )?;
-                    
-                    current_deposit = 0; // Para a recursividade
-                } 
-                else if upline_slot_idx == 1 {
-                    msg!("Recursion upline_slot_idx 1 (SLOT 2) - reserving SOL and minting tokens");
-                    
-                    // SLOT 1 na recursividade: Reservar SOL (SEM WSOL)
-                    process_reserve_sol(
-                        &ctx.accounts.user_wallet.to_account_info(),
-                        &ctx.accounts.program_sol_vault.to_account_info(),
-                        current_deposit
-                    )?;
-                    
-                    upline_account_data.reserved_sol = current_deposit;
-                    
-                    let token_amount = get_donut_tokens_amount(
-                        a_vault_lp,
-                        &ctx.accounts.b_vault_lp.to_account_info(),
-                        a_vault_lp_mint,
-                        &ctx.accounts.b_vault_lp_mint.to_account_info(),
-                        a_token_vault,
-                        &ctx.accounts.b_token_vault.to_account_info(),
-                        current_deposit
-                    )?;
-                    
-                    let adjusted_token_amount = check_mint_limit(state, token_amount)?;
-                    force_memory_cleanup();
-                    
-                    process_mint_tokens(
-                        &ctx.accounts.token_mint.to_account_info(),
-                        &ctx.accounts.program_token_vault.to_account_info(),
-                        &ctx.accounts.token_mint_authority.to_account_info(),
-                        &ctx.accounts.token_program,
-                        adjusted_token_amount,
-                        &[&[
-                            b"token_mint_authority".as_ref(),
-                            &[ctx.bumps.token_mint_authority]
-                        ]],
-                    )?;
-
-                    force_memory_cleanup();
-                    
-                    upline_account_data.reserved_tokens = adjusted_token_amount;
-                    current_deposit = 0; // Para a recursividade
-                }
-                else if upline_slot_idx == 2 {
-                    msg!("Recursion upline_slot_idx 2 (SLOT 3) - paying upline");
-                    
-                    // SLOT 2 na recursividade: Pagar upline (SEM WSOL)
-                    if upline_account_data.reserved_sol > 0 {
-                        let reserved_sol = upline_account_data.reserved_sol;
-                        
-                        if upline_wallet.owner != &solana_program::system_program::ID {
-                            return Err(error!(ErrorCode::PaymentWalletInvalid));
-                        }
-                        
-                        let ix = solana_program::system_instruction::transfer(
-                            &ctx.accounts.program_sol_vault.key(),
-                            &upline_wallet.key(),
-                            reserved_sol
-                        );
-                        
-                        let mut accounts = Vec::with_capacity(2);
-                        accounts.push(ctx.accounts.program_sol_vault.to_account_info());
-                        accounts.push(upline_wallet.clone());
-                        
-                        solana_program::program::invoke_signed(
-                            &ix,
-                            &accounts,
-                            &[&[
-                                b"program_sol_vault".as_ref(),
-                                &[ctx.bumps.program_sol_vault]
-                            ]],
-                        ).map_err(|_| error!(ErrorCode::ReferrerPaymentFailed))?;
-                        
-                        upline_account_data.reserved_sol = 0;
-                    }
-                    
-                    if upline_account_data.reserved_tokens > 0 {
-                        let reserved_tokens = upline_account_data.reserved_tokens;
-                        
-                        if upline_token.owner != &spl_token::id() {
-                            return Err(error!(ErrorCode::TokenAccountInvalid));
-                        }
-                        
-                        process_transfer_tokens(
-                            &ctx.accounts.program_token_vault.to_account_info(),
-                            upline_token,
-                            &ctx.accounts.vault_authority.to_account_info(),
-                            &ctx.accounts.token_program,
-                            reserved_tokens,
-                            &[&[
-                                b"token_vault_authority".as_ref(),
-                                &[ctx.bumps.vault_authority]
-                            ]],
-                        )?;
-                        
-                        force_memory_cleanup();
-                        upline_account_data.reserved_tokens = 0;
-                    }
-                    // Continua recursividade (não break aqui)
-                }
-                
-                let chain_completed = upline_account_data.chain.filled_slots == 3;
-                
-                if chain_completed {
-                    let next_chain_id_value = state.next_chain_id;
-                    state.next_chain_id += 1;
-                    
-                    upline_account_data.chain.id = next_chain_id_value;
-                    upline_account_data.chain.slots = [None, None, None];
-                    upline_account_data.chain.filled_slots = 0;
-                    
-                    current_user_pubkey = upline_key;
-                }
-                
-                {
-                    let mut data = upline_info.try_borrow_mut_data()?;
-                    let mut write_data = &mut data[8..];
-                    upline_account_data.serialize(&mut write_data)?;
-                }
-
-                force_memory_cleanup();
-                
-                if !chain_completed {
-                    break;
-                }
-                
-                if trio_index >= MAX_UPLINE_DEPTH - 1 {
-                    break;
-                }
-            }
-            
-            if current_deposit == 0 {
-                break;
-            }
-        }
-
-        // ===== TRATAMENTO DE DEPÓSITO RESTANTE CORRIGIDO =====
-        if current_deposit > 0 {
-            msg!("Processing remaining deposit of {} lamports - creating WSOL and depositing to pool", current_deposit);
-            
-            // Criar WSOL e depositar o valor restante na pool
-            create_wsol_and_deposit(
-                &ctx.accounts.user_wallet,
-                &ctx.accounts.wsol_mint,
+        // LOGIC FOR SLOT 1: Deposit to liquidity pool
+        if slot_idx == 0 {
+            // Transfer SOL to the liquidity pool using the created WSOL account
+            process_deposit_to_pool(
+                &ctx.accounts.user_wallet.to_account_info(),
+                &ctx.accounts.user_wsol_account.to_account_info(),
                 &ctx.accounts.b_vault_lp.to_account_info(),
                 &ctx.accounts.b_vault,
                 &ctx.accounts.b_token_vault.to_account_info(),
                 &ctx.accounts.b_vault_lp_mint.to_account_info(),
                 &ctx.accounts.vault_program,
                 &ctx.accounts.token_program,
-                &ctx.accounts.system_program,
-                &ctx.accounts.rent,
-                current_deposit,
+                deposit_amount
             )?;
-        }
-    }
-}
+        } 
+        // LOGIC FOR SLOT 2: Reserve SOL value and mint tokens
+        else if slot_idx == 1 {
+            // Closing the WSOL account transfers the lamports back to the owner
+            let close_ix = spl_token::instruction::close_account(
+                &token::ID,
+                &ctx.accounts.user_wsol_account.key(),
+                &ctx.accounts.user_wallet.key(),
+                &ctx.accounts.user_wallet.key(),
+                &[]
+            )?;
+            
+            let close_accounts = [
+                ctx.accounts.user_wsol_account.to_account_info(),
+                ctx.accounts.user_wallet.to_account_info(),
+                ctx.accounts.user_wallet.to_account_info(),
+            ];
+            
+            solana_program::program::invoke(
+                &close_ix,
+                &close_accounts,
+            ).map_err(|_| error!(ErrorCode::UnwrapSolFailed))?;
+            
+            // Now transfer SOL to reserve
+            process_reserve_sol(
+                &ctx.accounts.user_wallet.to_account_info(),
+                &ctx.accounts.program_sol_vault.to_account_info(),
+                deposit_amount
+            )?;
+            
+            // Update reserved value for the referrer
+            ctx.accounts.referrer.reserved_sol = deposit_amount;
+            
+            // Calculate tokens based on pool value
+            let token_amount = get_donut_tokens_amount(
+                a_vault_lp,
+                &ctx.accounts.b_vault_lp.to_account_info(),
+                a_vault_lp_mint,
+                &ctx.accounts.b_vault_lp_mint.to_account_info(),
+                a_token_vault,
+                &ctx.accounts.b_token_vault.to_account_info(),
+                deposit_amount
+            )?;
+            
+            // Check and adjust the value according to the limit
+            let adjusted_token_amount = check_mint_limit(state, token_amount)?;
 
-msg!("Registration completed successfully");
-Ok(())
-}
+            // Force cleanup after calculation
+            force_memory_cleanup();
+            
+            // Mint tokens for the program vault
+            process_mint_tokens(
+                &ctx.accounts.token_mint.to_account_info(),
+                &ctx.accounts.program_token_vault.to_account_info(),
+                &ctx.accounts.token_mint_authority.to_account_info(),
+                &ctx.accounts.token_program,
+                adjusted_token_amount,
+                &[&[
+                    b"token_mint_authority".as_ref(),
+                    &[ctx.bumps.token_mint_authority]
+                ]],
+            )?;
+
+            // Add cleanup:
+            force_memory_cleanup();
+            
+            // Update reserved tokens value for the referrer
+            ctx.accounts.referrer.reserved_tokens = adjusted_token_amount;
+        }
+        // LOGIC FOR SLOT 3: Pay referrer (SOL and tokens) and start recursion
+        else if slot_idx == 2 {
+            // 1. Transfer the reserved SOL value to the referrer
+            if ctx.accounts.referrer.reserved_sol > 0 {
+                // Verify that referrer_wallet is a system account
+                verify_wallet_is_system_account(&ctx.accounts.referrer_wallet.to_account_info())?;
+                
+                process_pay_referrer(
+                    &ctx.accounts.program_sol_vault.to_account_info(),
+                    &ctx.accounts.referrer_wallet.to_account_info(),
+                    ctx.accounts.referrer.reserved_sol,
+                    &[&[
+                        b"program_sol_vault".as_ref(),
+                        &[ctx.bumps.program_sol_vault]
+                    ]],
+                )?;
+                
+                // Zero out the reserved SOL value after payment
+                ctx.accounts.referrer.reserved_sol = 0;
+            }
+            
+            // Verify the token account is valid
+            verify_token_account(
+                &ctx.accounts.referrer_token_account.to_account_info(),
+                &ctx.accounts.referrer_wallet.key(),
+                &ctx.accounts.token_mint.key()
+            )?;
+            
+            // Transfer the reserved tokens to the referrer using vault_authority
+            if ctx.accounts.referrer.reserved_tokens > 0 {
+                process_transfer_tokens(
+                    &ctx.accounts.program_token_vault.to_account_info(),
+                    &ctx.accounts.referrer_token_account.to_account_info(),
+                    &ctx.accounts.vault_authority.to_account_info(),
+                    &ctx.accounts.token_program,
+                    ctx.accounts.referrer.reserved_tokens,
+                    &[&[
+                        b"token_vault_authority".as_ref(),
+                        &[ctx.bumps.vault_authority]
+                    ]],
+                )?;
+                // Add cleanup:
+                force_memory_cleanup();
+                
+                // Zero out the reserved tokens value after payment
+                ctx.accounts.referrer.reserved_tokens = 0;
+            }
+        }
+        
+        // Process the referrer's matrix
+        let (chain_completed, upline_pubkey) = process_referrer_chain(
+            &ctx.accounts.user_wallet.key(),
+            &mut ctx.accounts.referrer,
+            state.next_chain_id,
+        )?;
+
+        // Add cleanup:
+        force_memory_cleanup();
+        
+        // If the matrix was completed, increment the global ID for the next one
+        if chain_completed {
+            state.next_chain_id += 1;
+        }
+
+        // If the referrer's matrix was completed, process recursion
+        if chain_completed && slot_idx == 2 {
+            let mut current_user_pubkey = upline_pubkey;
+            let mut current_deposit = deposit_amount;
+            let mut wsol_closed = false;
+
+            // Calculate remaining accounts offset - skip the 3 vault A accounts and 2 Chainlink accounts
+            let upline_start_idx = VAULT_A_ACCOUNTS_COUNT + 2;
+
+            // Check if we have upline accounts to process (besides the 3 vault A accounts and 2 Chainlink accounts)
+            if ctx.remaining_accounts.len() > upline_start_idx && current_deposit > 0 {
+                let upline_accounts = &ctx.remaining_accounts[upline_start_idx..];
+                
+                // OPTIMIZATION - Check if remaining upline accounts are multiples of 3
+                if upline_accounts.len() % 3 != 0 {
+                    return Err(error!(ErrorCode::MissingUplineAccount));
+                }
+                
+                // Calculate number of trios (PDA, wallet, ATA)
+                let trio_count = upline_accounts.len() / 3;
+                
+                // OPTIMIZATION - Process in smaller batches to save memory
+                const BATCH_SIZE: usize = 1; 
+                
+                // Calculate number of batches (division with rounding up)
+                let batch_count = (trio_count + BATCH_SIZE - 1) / BATCH_SIZE;
+                
+                // Process each batch
+                for batch_idx in 0..batch_count {
+                    // Calculate batch range
+                    let start_trio = batch_idx * BATCH_SIZE;
+                    let end_trio = std::cmp::min(start_trio + BATCH_SIZE, trio_count);
+                    
+                    // Iterate through trios in current batch
+                    for trio_index in start_trio..end_trio {
+                        // Check maximum depth and if deposit is remaining
+                        if trio_index >= MAX_UPLINE_DEPTH || current_deposit == 0 {
+                            break;
+                        }
+
+                        // Calculate base index for each trio
+                        let base_idx = trio_index * 3;
+                        
+                        // Get current upline information
+                        let upline_info = &upline_accounts[base_idx];       // Account PDA
+                        let upline_wallet = &upline_accounts[base_idx + 1]; // Wallet 
+                        let upline_token = &upline_accounts[base_idx + 2];  // ATA for tokens
+                        
+                        // OPTIMIZATION - Basic validations before processing the account
+                        if upline_wallet.owner != &solana_program::system_program::ID {
+                            return Err(error!(ErrorCode::PaymentWalletInvalid));
+                        }
+                        
+                        // Check program ownership first before trying to deserialize
+                        if !upline_info.owner.eq(&crate::ID) {
+                            return Err(error!(ErrorCode::InvalidSlotOwner));
+                        }
+
+                        // STEP 1: Read and process data - Optimized for lower memory usage
+                        let mut upline_account_data;
+                        {
+                            // Limited scope for data borrowing
+                            let data = upline_info.try_borrow_data()?;
+                            if data.len() <= 8 {
+                                return Err(ProgramError::InvalidAccountData.into());
+                            }
+
+                            // Deserialize directly without clone
+                            let mut account_slice = &data[8..];
+                            upline_account_data = UserAccount::deserialize(&mut account_slice)?;
+
+                            // Verify registration immediately
+                            if !upline_account_data.is_registered {
+                                return Err(error!(ErrorCode::SlotNotRegistered));
+                            }
+                        }
+
+                        force_memory_cleanup();
+
+                        // Continue processing with deserialized data
+                        let upline_slot_idx = upline_account_data.chain.filled_slots as usize;
+                        let upline_key = *upline_info.key;
+                        
+                        // Verify token account only if it's slot 3
+                        if upline_slot_idx == 2 {
+                            if upline_token.owner != &spl_token::id() {
+                                return Err(error!(ErrorCode::TokenAccountInvalid));
+                            }
+                            
+                            verify_token_account(
+                                upline_token,
+                                &upline_wallet.key(),
+                                &ctx.accounts.token_mint.key()
+                            )?;
+                        }
+                        
+                        // Add current user to the matrix
+                        upline_account_data.chain.slots[upline_slot_idx] = Some(current_user_pubkey);
+                        
+                        // Emit slot filled event in recursion
+                        emit!(SlotFilled {
+                            slot_idx: upline_slot_idx as u8,
+                            chain_id: upline_account_data.chain.id,
+                            user: current_user_pubkey,
+                            owner: upline_key,
+                        });
+                        
+                        // Increment filled slots count
+                        upline_account_data.chain.filled_slots += 1;
+                        
+                        // Apply specific financial logic for the deposit
+                        if upline_slot_idx == 0 {
+                            // SLOT 1: Deposit to pool
+                            // Use the WSOL account that was kept open
+                            process_deposit_to_pool(
+                                &ctx.accounts.user_wallet.to_account_info(),
+                                &ctx.accounts.user_wsol_account.to_account_info(),
+                                &ctx.accounts.b_vault_lp.to_account_info(),
+                                &ctx.accounts.b_vault,
+                                &ctx.accounts.b_token_vault.to_account_info(),
+                                &ctx.accounts.b_vault_lp_mint.to_account_info(),
+                                &ctx.accounts.vault_program,
+                                &ctx.accounts.token_program,
+                                current_deposit
+                            )?;
+                            
+                            // Deposit was used, doesn't continue in recursion
+                            current_deposit = 0;
+                        } 
+                        else if upline_slot_idx == 1 {
+                            // SLOT 2: Reserve for upline (SOL and tokens)
+                            // Close WSOL account if still open
+                            if !wsol_closed {
+                                let close_ix = spl_token::instruction::close_account(
+                                    &token::ID,
+                                    &ctx.accounts.user_wsol_account.key(),
+                                    &ctx.accounts.user_wallet.key(),
+                                    &ctx.accounts.user_wallet.key(),
+                                    &[]
+                                )?;
+                                
+                                let close_accounts = [
+                                    ctx.accounts.user_wsol_account.to_account_info(),
+                                    ctx.accounts.user_wallet.to_account_info(),
+                                    ctx.accounts.user_wallet.to_account_info(),
+                                ];
+                                
+                                solana_program::program::invoke(
+                                    &close_ix,
+                                    &close_accounts,
+                                ).map_err(|_| error!(ErrorCode::UnwrapSolFailed))?;
+                                
+                                wsol_closed = true;
+                            }
+                            
+                            // Now reserve the SOL
+                            process_reserve_sol(
+                                &ctx.accounts.user_wallet.to_account_info(),
+                                &ctx.accounts.program_sol_vault.to_account_info(),
+                                current_deposit
+                            )?;
+                            
+                            // Update the reserved SOL value for the upline
+                            upline_account_data.reserved_sol = current_deposit;
+                            
+                            // Calculate tokens based on pool value (using vault A accounts)
+                            let token_amount = get_donut_tokens_amount(
+                                a_vault_lp,
+                                &ctx.accounts.b_vault_lp.to_account_info(),
+                                a_vault_lp_mint,
+                                &ctx.accounts.b_vault_lp_mint.to_account_info(),
+                                a_token_vault,
+                                &ctx.accounts.b_token_vault.to_account_info(),
+                                current_deposit
+                            )?;
+                            
+                            // Check and adjust the value according to the limit
+                            let adjusted_token_amount = check_mint_limit(state, token_amount)?;
+
+                            // Force cleanup after calculation
+                            force_memory_cleanup();
+                            
+                            // Mint tokens for the program vault
+                            process_mint_tokens(
+                                &ctx.accounts.token_mint.to_account_info(),
+                                &ctx.accounts.program_token_vault.to_account_info(),
+                                &ctx.accounts.token_mint_authority.to_account_info(),
+                                &ctx.accounts.token_program,
+                                adjusted_token_amount,
+                                &[&[
+                                    b"token_mint_authority".as_ref(),
+                                    &[ctx.bumps.token_mint_authority]
+                                ]],
+                            )?;
+
+                            force_memory_cleanup();
+                            
+                            // Update the reserved tokens value for the upline
+                            upline_account_data.reserved_tokens = adjusted_token_amount;
+                            
+                            // Deposit was reserved, doesn't continue in recursion
+                            current_deposit = 0;
+                        }
+                        // SLOT 3: Pay reserved SOL and tokens to upline
+                        else if upline_slot_idx == 2 {
+                            // Pay reserved SOL
+                            if upline_account_data.reserved_sol > 0 {
+                                let reserved_sol = upline_account_data.reserved_sol;
+                                
+                                // Verify that wallet is a system account
+                                if upline_wallet.owner != &solana_program::system_program::ID {
+                                    return Err(error!(ErrorCode::PaymentWalletInvalid));
+                                }
+                                
+                                // Create the transfer instruction
+                                let ix = solana_program::system_instruction::transfer(
+                                    &ctx.accounts.program_sol_vault.key(),
+                                    &upline_wallet.key(),
+                                    reserved_sol
+                                );
+                                
+                                // Use Vec instead of array to avoid lifetime problems
+                                let mut accounts = Vec::with_capacity(2);
+                                accounts.push(ctx.accounts.program_sol_vault.to_account_info());
+                                accounts.push(upline_wallet.clone());
+                                
+                                // Invoke the instruction with signature
+                                solana_program::program::invoke_signed(
+                                    &ix,
+                                    &accounts,
+                                    &[&[
+                                        b"program_sol_vault".as_ref(),
+                                        &[ctx.bumps.program_sol_vault]
+                                    ]],
+                                ).map_err(|_| error!(ErrorCode::ReferrerPaymentFailed))?;
+                                
+                                // Zero out the reserved SOL value
+                                upline_account_data.reserved_sol = 0;
+                            }
+                            
+                            // Pay reserved tokens
+                            if upline_account_data.reserved_tokens > 0 {
+                                let reserved_tokens = upline_account_data.reserved_tokens;
+                                
+                                // Verify if the token account is valid
+                                if upline_token.owner != &spl_token::id() {
+                                    return Err(error!(ErrorCode::TokenAccountInvalid));
+                                }
+                                
+                                // Transfer tokens using function with individual parameters
+                                process_transfer_tokens(
+                                    &ctx.accounts.program_token_vault.to_account_info(),
+                                    upline_token,
+                                    &ctx.accounts.vault_authority.to_account_info(),
+                                    &ctx.accounts.token_program,
+                                    reserved_tokens,
+                                    &[&[
+                                        b"token_vault_authority".as_ref(),
+                                        &[ctx.bumps.vault_authority]
+                                    ]],
+                                )?;
+                                
+                                // Add cleanup:
+                                force_memory_cleanup();
+                                
+                                // Zero out the reserved tokens value after payment
+                                upline_account_data.reserved_tokens = 0;
+                            }
+                        }
+                        
+                        // Check if matrix is complete
+                        let chain_completed = upline_account_data.chain.filled_slots == 3;
+                        
+                        // Process matrix completion only if necessary
+                        if chain_completed {
+                            // Get new ID for the reset matrix
+                            let next_chain_id_value = state.next_chain_id;
+                            state.next_chain_id += 1;
+                            
+                            // Reset matrix with new ID
+                            upline_account_data.chain.id = next_chain_id_value;
+                            upline_account_data.chain.slots = [None, None, None];
+                            upline_account_data.chain.filled_slots = 0;
+                            
+                            // Update current user for recursion
+                            current_user_pubkey = upline_key;
+                        }
+                        
+                        // STEP 2: Save changes back to the account
+                        {
+                            // New scope for mutable borrowing
+                            let mut data = upline_info.try_borrow_mut_data()?;
+                            let mut write_data = &mut data[8..];
+                            upline_account_data.serialize(&mut write_data)?;
+                        }
+
+                        // Add cleanup:
+                        force_memory_cleanup();
+                        
+                        // If matrix was not completed, stop processing here
+                        if !chain_completed {
+                            break;
+                        }
+                        
+                        // Check maximum depth after processing
+                        if trio_index >= MAX_UPLINE_DEPTH - 1 {
+                            break;
+                        }
+                    }
+                    
+                    // Stop batch processing if no more deposits
+                    if current_deposit == 0 {
+                        break;
+                    }
+                }
+
+                // Handle any remaining deposit
+                if current_deposit > 0 {
+                    // Deposit to pool if WSOL is still open
+                    if !wsol_closed {
+                        process_deposit_to_pool(
+                            &ctx.accounts.user_wallet.to_account_info(),
+                            &ctx.accounts.user_wsol_account.to_account_info(),
+                            &ctx.accounts.b_vault_lp.to_account_info(),
+                            &ctx.accounts.b_vault,
+                            &ctx.accounts.b_token_vault.to_account_info(),
+                            &ctx.accounts.b_vault_lp_mint.to_account_info(),
+                            &ctx.accounts.vault_program,
+                            &ctx.accounts.token_program,
+                            current_deposit
+                        )?;
+                    }
+                }
+                
+                // Close WSOL account if still open
+                if !wsol_closed {
+                    let account_info = ctx.accounts.user_wsol_account.to_account_info();
+                    if account_info.data_len() > 0 {
+                        let close_ix = spl_token::instruction::close_account(
+                            &token::ID,
+                            &ctx.accounts.user_wsol_account.key(),
+                            &ctx.accounts.user_wallet.key(),
+                            &ctx.accounts.user_wallet.key(),
+                            &[]
+                        )?;
+                        
+                        let close_accounts = [
+                            ctx.accounts.user_wsol_account.to_account_info(),
+                            ctx.accounts.user_wallet.to_account_info(),
+                            ctx.accounts.user_wallet.to_account_info(),
+                        ];
+                        
+                        solana_program::program::invoke(
+                            &close_ix,
+                            &close_accounts,
+                        ).map_err(|_| error!(ErrorCode::UnwrapSolFailed))?;
+                    }
+                }
+            }
+        }
+
+        Ok(())
+    }
 }

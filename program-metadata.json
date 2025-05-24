@@ -1,0 +1,25 @@
+{
+  "name": "DONUT Matrix System",
+  "symbol": "MATRIX",
+  "description": "Decentralized referral matrix system built on Solana with 3x1 matrix structure",
+  "image": "https://arweave.net/EgLpYLU3cv6niTYKfEcM2L1wW9CjaM36fOj4Ejgn7HA",
+  "external_url": "https://donut-matrix.com",
+  "attributes": [
+    {
+      "trait_type": "Category",
+      "value": "DeFi"
+    },
+    {
+      "trait_type": "Type",
+      "value": "Referral Matrix"
+    },
+    {
+      "trait_type": "Version",
+      "value": "1.0.0"
+    },
+    {
+      "trait_type": "Integration",
+      "value": "Meteora AMM"
+    }
+  ]
+}

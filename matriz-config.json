@@ -1,0 +1,17 @@
+{
+  "programId": "2wFmCLVQ8pSF2aKu43gLv2vzasUHhtmAA9HffBDXcRfF",
+  "stateAddress": "2UndNrTvi635pfsM5TZQr9KnMMNS29Ry6mtSCjcBFUyc",
+  "tokenMint": "3dCXCZd3cbKHT7jQSLzRNJQYu1zEzaD8FHi4MWHLX4DZ",
+  "tokenMintAuthority": "7iLN3cJU64LnurMTztGnrAx9QmxsHk35nnCZQ8r4HVJZ",
+  "tokenMintAuthorityBump": 253,
+  "programSolVault": "9XuHX9q6UUeD1prgBB8FR8Te96zLiEAf3Te2n7zM5pES",
+  "programSolVaultBump": 255,
+  "vaultAuthority": "6MYE8uDkAdHAUiKHxuFxvC76ej9H85148F61Jp9c7iTm",
+  "vaultAuthorityBump": 253,
+  "programTokenVault": "FTCHzriRNyB15TTX9FrquYF3MQjjTALxSC11rEViTzLg",
+  "ownerWallet": "8gVApS2cyCuYsGk7VqjMhTc6cSEBx6fhGz7T7wSrWEpv",
+  "multisigTreasury": "Eu22Js2qTu5bCr2WFY2APbvhDqAhUZpkYKmVsfeyqR2N",
+  "nextUplineId": "11",
+  "nextChainId": "14",
+  "lastMintAmount": "423878"
+}
