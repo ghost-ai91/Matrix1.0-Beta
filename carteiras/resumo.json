@@ -1,0 +1,37 @@
+[
+  {
+    "index": 1,
+    "publicKey": "HKFeTEAUqCSSM5foi9K35vTQPH6KSgHcKQkCaEFTLuNB",
+    "filePath": "carteiras/carteira1.json"
+  },
+  {
+    "index": 2,
+    "publicKey": "8qJffg65LqtnWGArgyddReinfecFerWmeNR4xhbvk6KS",
+    "filePath": "carteiras/carteira2.json"
+  },
+  {
+    "index": 3,
+    "publicKey": "H5EHNetcQYDLrHGtpL5Hdd3cBjUbkXsTYvuxr1JxVei1",
+    "filePath": "carteiras/carteira3.json"
+  },
+  {
+    "index": 4,
+    "publicKey": "ZMiLCWBuHGEmr4QZi1m6NQjnVwTsS3qQeKYThPPvL4D",
+    "filePath": "carteiras/carteira4.json"
+  },
+  {
+    "index": 5,
+    "publicKey": "AA4X4c2regHPnNyEgBiDFpTKCt5B62b7z6r5NSFD7neo",
+    "filePath": "carteiras/carteira5.json"
+  },
+  {
+    "index": 6,
+    "publicKey": "5RD1q3njJvQDMq6dVyA51cjgNrQowDN8EB8vaWHcENP7",
+    "filePath": "carteiras/carteira6.json"
+  },
+  {
+    "index": 7,
+    "publicKey": "CigaMg5a5bDhuJFmDpNQPPVFXWtQErjQMYPhibLfYi41",
+    "filePath": "carteiras/carteira7.json"
+  }
+]
